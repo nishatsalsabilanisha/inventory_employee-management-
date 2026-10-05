@@ -1,0 +1,11 @@
+Django>=6.0.0,<7.0.0
+psycopg[binary]>=3.2.0
+pillow>=10.0.0
+python-decouple>=3.8
+requests>=2.31.0
+reportlab>=4.0.0
+xhtml2pdf>=0.2.15
+django-crispy-forms>=2.0
+crispy-bootstrap5>=2024.2
+openpyxl>=3.1.0
+xlsxwriter>=3.2.0

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow p-4">
+
+        <h2 class="text-center mb-4">Employee Profile</h2>
+
+        <div class="text-center">
+
+            {% if profile.photo %}
+                <img src="{{ profile.photo.url }}"
+                     width="180"
+                     height="180"
+                     style="border-radius:50%;object-fit:cover;">
+            {% else %}
+                <img src="{% static 'images/default-user.png' %}"
+                     width="180"
+                     height="180"
+                     style="border-radius:50%;">
+            {% endif %}
+
+        </div>
+
+        <hr>
+
+        <h4>{{ profile.employee.name }}</h4>
+
+        <p><strong>Public ID:</strong> {{ profile.public_id }}</p>
+
+        <p><strong>Phone:</strong> {{ profile.phone }}</p>
+
+        <p><strong>Designation:</strong> {{ profile.designation }}</p>
+
+        <a href="{% url 'edit_employee_profile' %}"
+           class="btn btn-primary">
+            Edit Profile
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

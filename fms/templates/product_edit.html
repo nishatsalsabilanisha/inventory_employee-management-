@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fas fa-edit me-2" style="color:#0ea5e9;"></i>Edit Product</h2>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card card-custom">
+      <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" autocomplete="off">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Product Name *</label>
+              <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Brand</label>
+              <input type="text" name="brand" class="form-control" value="{{ product.brand }}">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">SKU</label>
+              <input type="text" name="sku" class="form-control" value="{{ product.sku }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Price (৳) *</label>
+              <input type="number" step="0.01" name="price" class="form-control" value="{{ product.price }}" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Discount Price (৳)</label>
+              <input type="number" step="0.01" name="discount_price" class="form-control" value="{{ product.discount_price|default_if_none:'' }}" placeholder="optional">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Stock Quantity</label>
+              <input type="number" name="stock" class="form-control" value="{{ product.stock }}" min="0">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Category</label>
+              <select name="category" class="form-select">
+                <option value="Menswear" {% if product.category == 'Menswear' %}selected{% endif %}>Men</option>
+                <option value="Womenswear" {% if product.category == 'Womenswear' %}selected{% endif %}>Women</option>
+                <option value="Kids" {% if product.category == 'Kids' %}selected{% endif %}>Kids</option>
+                <option value="Activewear" {% if product.category == 'Activewear' %}selected{% endif %}>Activewear</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Subcategory</label>
+              <select name="subcategory" class="form-select">
+                <optgroup label="Men">
+                  <option value="Jeans" {% if product.subcategory == 'Jeans' %}selected{% endif %}>Jeans</option>
+                  <option value="Shirt" {% if product.subcategory == 'Shirt' %}selected{% endif %}>Shirt</option>
+                  <option value="Men Shoes" {% if product.subcategory == 'Men Shoes' %}selected{% endif %}>Men Shoes</option>
+                  <option value="T-Shirts" {% if product.subcategory == 'T-Shirts' %}selected{% endif %}>T-Shirts</option>
+                  <option value="Pants" {% if product.subcategory == 'Pants' %}selected{% endif %}>Pants</option>
+                  <option value="Jackets" {% if product.subcategory == 'Jackets' %}selected{% endif %}>Jackets</option>
+                </optgroup>
+                <optgroup label="Women">
+                  <option value="Tops" {% if product.subcategory == 'Tops' %}selected{% endif %}>Tops</option>
+                  <option value="Kamiz" {% if product.subcategory == 'Kamiz' %}selected{% endif %}>Kamiz</option>
+                  <option value="Salwar Kameez" {% if product.subcategory == 'Salwar Kameez' %}selected{% endif %}>Salwar Kameez</option>
+                  <option value="Kurti" {% if product.subcategory == 'Kurti' %}selected{% endif %}>Kurti</option>
+                  <option value="Dupatta" {% if product.subcategory == 'Dupatta' %}selected{% endif %}>Dupatta</option>
+                  <option value="Women Shoes" {% if product.subcategory == 'Women Shoes' %}selected{% endif %}>Women Shoes</option>
+                  <option value="Dresses" {% if product.subcategory == 'Dresses' %}selected{% endif %}>Dresses</option>
+                  <option value="Skirts" {% if product.subcategory == 'Skirts' %}selected{% endif %}>Skirts</option>
+                  <option value="Bags" {% if product.subcategory == 'Bags' %}selected{% endif %}>Bags</option>
+                </optgroup>
+                <optgroup label="Kids">
+                  <option value="Kids T-Shirts" {% if product.subcategory == 'Kids T-Shirts' %}selected{% endif %}>Kids T-Shirts</option>
+                  <option value="Kids Jeans" {% if product.subcategory == 'Kids Jeans' %}selected{% endif %}>Kids Jeans</option>
+                  <option value="Kids Shoes" {% if product.subcategory == 'Kids Shoes' %}selected{% endif %}>Kids Shoes</option>
+                  <option value="Kids Dresses" {% if product.subcategory == 'Kids Dresses' %}selected{% endif %}>Kids Dresses</option>
+                </optgroup>
+                <optgroup label="General">
+                  <option value="Accessories" {% if product.subcategory == 'Accessories' %}selected{% endif %}>Accessories</option>
+                  <option value="Sports Bra" {% if product.subcategory == 'Sports Bra' %}selected{% endif %}>Sports Bra</option>
+                  <option value="Leggings" {% if product.subcategory == 'Leggings' %}selected{% endif %}>Leggings</option>
+                  <option value="Track Pants" {% if product.subcategory == 'Track Pants' %}selected{% endif %}>Track Pants</option>
+                  <option value="Shorts" {% if product.subcategory == 'Shorts' %}selected{% endif %}>Shorts</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Description</label>
+              <textarea name="description" class="form-control" rows="3">{{ product.description }}</textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold"><i class="fas fa-images me-1"></i>Add More Images</label>
+              <input type="file" name="images" class="form-control" accept="image/*" multiple>
+            </div>
+          </div>
+          <div class="mt-4">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Update Product</button>
+            <a href="{% url 'product_data' %}" class="btn btn-outline-secondary ms-2">Cancel</a>
+            <a href="{% url 'product_variants' product.sl %}" class="btn btn-outline-primary ms-2"><i class="fas fa-palette me-1"></i>Variants</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card card-custom">
+      <div class="card-header bg-transparent fw-bold"><i class="fas fa-images me-2"></i>Product Gallery ({{ product.images.count }})</div>
+      <div class="card-body">
+        {% for img in product.images.all %}
+        <div class="d-flex align-items-center gap-3 mb-3 pb-2 border-bottom">
+          <img src="{{ img.image.url }}" style="width:60px;height:70px;object-fit:cover;border-radius:8px;" alt="">
+          <div class="flex-grow-1">
+            {% if img.is_primary %}
+              <span class="badge bg-primary">Cover</span>
+            {% else %}
+              <a href="{% url 'product_image_set_primary' img.id %}" class="small text-decoration-none" style="color:#0ea5e9;">Set as cover</a>
+            {% endif %}
+            <div class="small text-muted">#{{ img.id }}</div>
+          </div>
+          <a href="{% url 'product_image_delete' img.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this image?')"><i class="fas fa-trash"></i></a>
+        </div>
+        {% empty %}
+        <p class="text-muted small mb-0 text-center py-3">No gallery images yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card card-custom mt-3">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div>
+          <div class="fw-bold">Customer Preview</div>
+          <div class="small text-muted">See how this product looks on the website.</div>
+        </div>
+        <a href="{% url 'product_detail' product.sl %}" target="_blank" class="btn btn-primary"><i class="fas fa-eye me-1"></i>Preview</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

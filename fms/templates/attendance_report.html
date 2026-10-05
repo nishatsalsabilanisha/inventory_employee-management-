@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fas fa-chart-bar me-2" style="color:#0ea5e9;"></i>Attendance Report</h2>
+
+<form method="get" class="card card-custom mb-4">
+  <div class="card-body py-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label small fw-semibold mb-1">From</label>
+        <input type="date" name="from" value="{{ from_date|date:'Y-m-d' }}" class="form-control" style="max-width:200px;">
+      </div>
+      <div class="col-auto">
+        <label class="form-label small fw-semibold mb-1">To</label>
+        <input type="date" name="to" value="{{ to_date|date:'Y-m-d' }}" class="form-control" style="max-width:200px;">
+      </div>
+      <div class="col-auto">
+        <label class="form-label small fw-semibold mb-1">Search</label>
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Employee name..." style="max-width:200px;">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i>Apply</button>
+      </div>
+      <div class="col-auto ms-auto">
+        <a href="{% url 'report_attendance' %}?{% if from_date %}from={{ from_date|date:'Y-m-d' }}&to={{ to_date|date:'Y-m-d' }}{% endif %}&export=pdf" class="btn btn-outline-danger"><i class="fas fa-file-pdf me-1"></i>PDF</a>
+        <a href="{% url 'report_attendance' %}?{% if from_date %}from={{ from_date|date:'Y-m-d' }}&to={{ to_date|date:'Y-m-d' }}{% endif %}&export=excel" class="btn btn-outline-success"><i class="fas fa-file-excel me-1"></i>Excel</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#28a745;">{{ summary.present }}</h4>
+      <small class="text-muted">Present</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#ffc107;">{{ summary.late }}</h4>
+      <small class="text-muted">Late</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#17a2b8;">{{ summary.leave }}</h4>
+      <small class="text-muted">Leave</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#dc3545;">{{ summary.absent }}</h4>
+      <small class="text-muted">Absent</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#0ea5e9;">{{ summary.percentage }}%</h4>
+      <small class="text-muted">Overall Attendance</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0">{{ summary.expected }}</h4>
+      <small class="text-muted">Expected Days</small>
+    </div>
+  </div>
+</div>
+
+<div class="card card-custom">
+  <div class="card-header bg-transparent fw-bold">Present / Absent Status - {{ from_date }} to {{ to_date }}</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Employee</th>
+            <th>Employee ID</th>
+            <th class="text-center">Present</th>
+            <th class="text-center">Late</th>
+            <th class="text-center">Leave</th>
+            <th class="text-center">Absent</th>
+            <th class="text-center">Expected</th>
+            <th class="text-center">Attendance %</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td class="fw-semibold">{{ r.profile.employee.name }}</td>
+            <td class="small text-muted">{{ r.profile.public_id }}</td>
+            <td class="text-center text-success fw-bold">{{ r.present }}</td>
+            <td class="text-center text-warning fw-bold">{{ r.late }}</td>
+            <td class="text-center text-info fw-bold">{{ r.leave }}</td>
+            <td class="text-center text-danger fw-bold">{{ r.absent }}</td>
+            <td class="text-center">{{ r.expected }}</td>
+            <td class="text-center fw-bold" style="color:#0ea5e9;">{{ r.percentage }}%</td>
+            <td>
+              {% if r.percentage >= 90 %}
+                <span class="badge bg-success">Excellent</span>
+              {% elif r.percentage >= 75 %}
+                <span class="badge bg-info text-dark">Good</span>
+              {% elif r.percentage >= 50 %}
+                <span class="badge bg-warning text-dark">Average</span>
+              {% else %}
+                <span class="badge bg-danger">Poor</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="9" class="text-center text-muted py-4">No data for this range.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

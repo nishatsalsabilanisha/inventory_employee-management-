@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}{% if announcement %}Edit{% else %}Add{% endif %} Announcement{% endblock %}
+{% block content %}
+<h2 class="fw-bold mb-4">
+  <i class="fas {% if announcement %}fa-edit{% else %}fa-plus{% endif %} me-2" style="color:#0ea5e9;"></i>
+  {% if announcement %}Edit Announcement{% else %}Add Announcement{% endif %}
+</h2>
+
+<div class="card card-custom">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Title</label>
+        <input type="text" name="title" class="form-control" value="{{ announcement.title|default:'' }}" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Content</label>
+        <textarea name="content" class="form-control" rows="6" required>{{ announcement.content|default:'' }}</textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">
+        {% if announcement %}<i class="fas fa-save me-1"></i>Update Announcement{% else %}<i class="fas fa-paper-plane me-1"></i>Publish Announcement{% endif %}
+      </button>
+      <a href="{% url 'announcement_list' %}" class="btn btn-outline-secondary ms-2">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

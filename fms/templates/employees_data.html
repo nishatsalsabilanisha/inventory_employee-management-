@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0"><i class="fas fa-users me-2" style="color:#0ea5e9;"></i>Employees</h2>
+  <a href="{% url 'employee_add' %}" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Add Employee</a>
+</div>
+
+<form method="get" class="card card-custom mb-4">
+  <div class="card-body py-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold mb-1">Search</label>
+        <div class="input-group">
+          <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Name, email, phone, ID...">
+          <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold mb-1">Department</label>
+        <select name="department" class="form-select" onchange="this.form.submit()">
+          <option value="">All Departments</option>
+          {% for d in departments %}
+            <option value="{{ d.id }}" {% if dept_filter == d.id|stringformat:"s" %}selected{% endif %}>{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold mb-1">Job Position</label>
+        <select name="position" class="form-select" onchange="this.form.submit()">
+          <option value="">All Positions</option>
+          {% for p in job_positions %}
+            <option value="{{ p.id }}" {% if position_filter == p.id|stringformat:"s" %}selected{% endif %}>{{ p.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        {% if q or dept_filter or position_filter %}
+        <a href="{% url 'employee_data' %}" class="btn btn-outline-secondary w-100"><i class="fas fa-times me-1"></i>Clear</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="card card-custom">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold mb-0"><i class="fas fa-database me-2" style="color:#0ea5e9;"></i>Employee Data ({{ employees|length }})</h5>
+      <a href="{% url 'report_employee' %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-chart-bar me-1"></i>Full Report</a>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Department</th>
+            <th>Job Position</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for emp in employees %}
+          <tr>
+            <td>{{ emp.sl }}</td>
+            <td class="fw-semibold">{{ emp.name }}
+              {% if emp.employeeprofile.public_id %}
+                <div class="small text-muted">{{ emp.employeeprofile.public_id }}</div>
+              {% endif %}
+            </td>
+            <td>{{ emp.email }}</td>
+            <td>{{ emp.phone }}</td>
+            <td>
+              {% if emp.employeeprofile.department %}
+                <span class="badge" style="background:#e0f2fe;color:#0369a1;">{{ emp.employeeprofile.department.name }}</span>
+              {% else %}
+                <span class="text-muted">--</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if emp.employeeprofile.job_position %}
+                {{ emp.employeeprofile.job_position.title }}
+              {% else %}
+                <span class="text-muted">--</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if emp.employeeprofile %}
+                <a href="{% url 'assign_department_position' emp.employeeprofile.id %}" class="btn btn-sm btn-outline-primary" title="Assign Department/Position"><i class="fas fa-user-tag"></i></a>
+              {% else %}
+                <span class="badge text-bg-secondary">No Profile</span>
+              {% endif %}
+              <a href="{% url 'employee_edit' emp.sl %}" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="fas fa-edit"></i></a>
+              <a href="{% url 'employee_delete' emp.sl %}" class="btn btn-sm btn-outline-danger" title="Delete" onclick="return confirm('Delete {{ emp.name }}? This removes payroll, attendance and leave records too.')"><i class="fas fa-trash"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center text-muted py-4">No employees found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

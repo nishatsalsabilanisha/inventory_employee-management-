@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    <h2 class="fw-bold mb-4"><i class="fas fa-money-bill-wave me-2" style="color:#0ea5e9;"></i>Payroll - Monthly Salary</h2>
+
+    <form method="get" class="row g-2 mb-4 align-items-end">
+      <div class="col-auto">
+        <label class="form-label small fw-semibold mb-1">Salary Month</label>
+        <input type="month" name="month" value="{{ month }}" class="form-control" style="max-width:220px;">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i>Show Salary</button>
+      </div>
+      <div class="col-auto ms-auto">
+        <a href="{% url 'salary_payment_history' %}" class="btn btn-outline-primary"><i class="fas fa-history me-1"></i>Salary History</a>
+        <a href="{% url 'report_payroll' %}?month={{ month }}" class="btn btn-outline-primary"><i class="fas fa-file-alt me-1"></i>Payroll Report</a>
+      </div>
+    </form>
+
+    {% if rows %}
+    <div class="card card-custom">
+      <div class="card-header bg-transparent fw-bold">Salary Calculation - {{ month }}</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Employee Name</th>
+                <th>Employee ID</th>
+                <th class="text-end">Basic Salary</th>
+                <th class="text-center">Paid Leave</th>
+                <th class="text-center">LWP</th>
+                <th class="text-end">Leave Ded.</th>
+                <th class="text-center">Absent</th>
+                <th class="text-end">Attn Ded.</th>
+                <th class="text-center">OT Hrs</th>
+                <th class="text-end">OT Amt</th>
+                <th class="text-end">Net Salary</th>
+                <th class="text-center">Status</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in rows %}
+              <tr>
+                <td class="fw-semibold">{{ r.profile.employee.name }}</td>
+                <td class="small text-muted">{{ r.profile.public_id }}</td>
+                <td class="text-end">৳{{ r.basic|floatformat:2 }}</td>
+                <td class="text-center">{{ r.paid_days }}</td>
+                <td class="text-center">{{ r.unpaid_days }}</td>
+                <td class="text-end text-danger">{% if r.leave_deduction %}৳{{ r.leave_deduction|floatformat:2 }}{% else %}<span class="text-muted">--</span>{% endif %}</td>
+                <td class="text-center">{% if r.absent_days %}{{ r.absent_days }}{% else %}<span class="text-muted">--</span>{% endif %}</td>
+                <td class="text-end text-danger">{% if r.attendance_deduction %}৳{{ r.attendance_deduction|floatformat:2 }}{% else %}<span class="text-muted">--</span>{% endif %}</td>
+                <td class="text-center">{% if r.overtime_hours %}{{ r.overtime_hours|floatformat:1 }}{% else %}<span class="text-muted">--</span>{% endif %}</td>
+                <td class="text-end text-success">{% if r.overtime_amount %}৳{{ r.overtime_amount|floatformat:2 }}{% else %}<span class="text-muted">--</span>{% endif %}</td>
+                <td class="text-end fw-bold" style="color:#0ea5e9;">৳{{ r.net|floatformat:2 }}</td>
+                <td class="text-center">
+                  {% if r.paid %}
+                    <span class="badge bg-success">Paid</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">Unpaid</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  {% if r.paid %}
+                    <a href="{% url 'salary_slip' r.payment.id %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-print me-1"></i>Slip</a>
+                  {% else %}
+                    <a href="{% url 'pay_salary' r.profile.id %}?month={{ month }}" class="btn btn-sm btn-success"><i class="fas fa-hand-holding-usd me-1"></i>Pay Salary</a>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="table-light fw-bold">
+              <tr>
+                <td colspan="2">Total ({{ totals.total }} employees)</td>
+                <td class="text-end">৳{{ totals.basic|floatformat:2 }}</td>
+                <td colspan="2" class="text-center text-muted">--</td>
+                <td class="text-end text-danger">৳{{ totals.leave_deduction|floatformat:2 }}</td>
+                <td colspan="2" class="text-center text-danger">৳{{ totals.attendance_deduction|floatformat:2 }}</td>
+                <td colspan="2" class="text-center text-success">৳{{ totals.overtime_amount|floatformat:2 }}</td>
+                <td class="text-end" style="color:#0ea5e9;">৳{{ totals.net|floatformat:2 }}</td>
+                <td class="text-center text-success">{{ totals.paid }} paid</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p class="text-muted text-center py-4">No employees found.</p>
+    {% endif %}
+{% endblock %}

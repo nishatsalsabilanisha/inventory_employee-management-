@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    <h2 class="fw-bold mb-4"><i class="fas fa-chart-pie me-2" style="color:#0ea5e9;"></i>Admin Dashboard</h2>
+    <div class="row g-4 mb-4">
+      <div class="col-md-4 col-6">
+        <div class="card card-custom p-3 text-center">
+          <i class="fas fa-users fa-2x mb-2" style="color:#0ea5e9;"></i>
+          <h4 class="fw-bold mb-0">{{ employees|length }}</h4>
+          <small class="text-muted">Employees</small>
+        </div>
+      </div>
+      <div class="col-md-4 col-6">
+        <div class="card card-custom p-3 text-center">
+          <i class="fas fa-box fa-2x mb-2" style="color:#22d3ee;"></i>
+          <h4 class="fw-bold mb-0">{{ products|length }}</h4>
+          <small class="text-muted">Products</small>
+        </div>
+      </div>
+      <div class="col-md-4 col-6">
+        <div class="card card-custom p-3 text-center">
+          <i class="fas fa-shopping-bag fa-2x mb-2" style="color:#0ea5e9;"></i>
+          <h4 class="fw-bold mb-0">{{ order_count|default:"0" }}</h4>
+          <small class="text-muted">Orders</small>
+        </div>
+      </div>
+    </div>
+    <div class="row g-4 mb-4">
+      <div class="col-md-3 col-6">
+        <div class="card card-custom p-3 text-center">
+          <i class="fas fa-calendar-check fa-2x mb-2 text-success"></i>
+          <h4 class="fw-bold mb-0">{{ today_attendance|length }}</h4>
+          <small class="text-muted">Today's Attendance</small>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card card-custom p-3 text-center">
+          <i class="fas fa-clock fa-2x mb-2 text-warning"></i>
+          <h4 class="fw-bold mb-0">{{ late_count }}</h4>
+          <small class="text-muted">Late Employees</small>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card card-custom p-3 text-center">
+          <i class="fas fa-user-slash fa-2x mb-2 text-danger"></i>
+          <h4 class="fw-bold mb-0">{{ absent_profiles|length }}</h4>
+          <small class="text-muted">Absent Employees</small>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card card-custom p-3 text-center">
+          <i class="fas fa-money-bill-wave fa-2x mb-2" style="color:#0ea5e9;"></i>
+          <h4 class="fw-bold mb-0">{{ payroll_totals.pending }}</h4>
+          <small class="text-muted">Pending Payments</small>
+        </div>
+      </div>
+    </div>
+    <div class="card card-custom mb-4">
+      <div class="card-header bg-transparent fw-bold">Monthly Payroll Summary - {{ payroll_month }}</div>
+      <div class="card-body p-0">
+        <div class="row g-0 text-center">
+          <div class="col-md-4 py-3 border-end">
+            <small class="text-muted">Total Basic Salary</small>
+            <h5 class="fw-bold mb-0">৳{{ payroll_totals.basic|floatformat:2 }}</h5>
+          </div>
+          <div class="col-md-4 py-3 border-end">
+            <small class="text-danger">Total Deduction</small>
+            <h5 class="fw-bold mb-0 text-danger">৳{{ payroll_totals.deduction|floatformat:2 }}</h5>
+          </div>
+          <div class="col-md-4 py-3">
+            <small class="text-muted">Total Net Payable</small>
+            <h5 class="fw-bold mb-0" style="color:#0ea5e9;">৳{{ payroll_totals.net|floatformat:2 }}</h5>
+          </div>
+        </div>
+        <div class="text-center small text-muted pb-2">
+          <span class="badge bg-success me-2">{{ payroll_totals.paid }} paid</span>
+          <span class="badge bg-warning text-dark">{{ payroll_totals.pending }} pending</span>
+          <a href="{% url 'admin_payroll' %}" class="ms-2">Manage Payroll</a>
+        </div>
+      </div>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-12">
+        <div class="card card-custom">
+          <div class="card-header bg-transparent fw-bold">Today's Attendance</div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light small">
+                  <tr><th>Employee</th><th>Date</th><th>Check-in</th><th>Check-out</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  {% for a in today_attendance %}
+                  <tr>
+                    <td class="fw-semibold">{{ a.employee.employee.name }}</td>
+                    <td class="small">{{ a.date }}</td>
+                    <td class="small">{{ a.check_in|default:"--" }}</td>
+                    <td class="small">{{ a.check_out|default:"--" }}</td>
+                    <td>
+                      <span class="badge bg-{% if a.status == 'Present' %}success{% else %}warning text-dark{% endif %}">{{ a.status }}</span>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="5" class="text-center text-muted py-4">No attendance recorded today yet.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row g-4 mt-2">
+      <div class="col-md-12">
+        <div class="card card-custom">
+          <div class="card-header bg-transparent fw-bold">Recent Employees</div>
+          <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+              <thead class="table-light small">
+                <tr><th>Name</th><th>Email</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                {% for emp in employees|slice:":5" %}
+                <tr>
+                  <td class="fw-semibold">{{ emp.name }}</td>
+                  <td class="small">{{ emp.email }}</td>
+                  <td><span class="badge bg-{% if emp.payment_status == 'Paid' %}success{% else %}warning{% endif %}">{{ emp.payment_status }}</span></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}

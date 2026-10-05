@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #333; }
+  h1 { font-size: 18px; margin: 0 0 4px; color: #0ea5e9; }
+  .sub { color: #888; font-size: 10px; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th { background: #e0f2fe; color: #0369a1; padding: 5px 6px; text-align: left; font-size: 10px; }
+  td { padding: 4px 6px; border-bottom: 1px solid #eee; }
+  .right { text-align: right; }
+  .center { text-align: center; }
+  .total-row td { font-weight: bold; border-top: 2px solid #0ea5e9; }
+</style>
+</head>
+<body>
+  <h1>Order Report - Touch and Solve</h1>
+  <div class="sub">Period: {{ from_date }} to {{ to_date }} | Generated on {{ generated_at }}</div>
+  <table>
+    <tr>
+      <th>Order</th><th>Customer</th><th>Product</th>
+      <th class="center">Qty</th><th class="right">Unit Price</th>
+      <th class="right">Total</th><th>Payment</th><th>Status</th><th>Date</th>
+    </tr>
+    {% for o in orders %}
+    <tr>
+      <td>#{{ o.id }}</td>
+      <td>{{ o.customer.name }}</td>
+      <td>{{ o.product.name }}</td>
+      <td class="center">{{ o.quantity }}</td>
+      <td class="right">{{ o.unit_price|default:o.product.price }}</td>
+      <td class="right">{{ o.total_amount }}</td>
+      <td>{{ o.payment_method }}</td>
+      <td>{{ o.status }}</td>
+      <td>{{ o.created_at|date:"Y-m-d" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="9">No orders in this period.</td></tr>
+    {% endfor %}
+    <tr class="total-row">
+      <td colspan="4">Total: {{ summary.total }} orders | {{ summary.items }} items</td>
+      <td class="right">Avg: {{ summary.avg }}</td>
+      <td class="right">{{ summary.revenue }}</td>
+      <td colspan="3"></td>
+    </tr>
+  </table>
+</body>
+</html>

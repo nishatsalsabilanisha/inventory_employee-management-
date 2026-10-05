@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - PDF Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: #1a1a1a;
+            line-height: 1.6;
+            background-color: white;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2e5cb8;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2e5cb8;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .logo-title {
+            color: #0ea5e9;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .generated-date {
+            color: #666;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        h2 {
+            color: #2e5cb8;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 20px;
+            border-bottom: 2px solid #2e5cb8;
+            padding-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background-color: white;
+            page-break-inside: avoid;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #2e5cb8;
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f5f7ff;
+        }
+
+        tr:hover {
+            background-color: #e8eef7;
+        }
+
+        .summary-box {
+            background-color: #f0f4ff;
+            border-left: 4px solid #2e5cb8;
+            padding: 15px;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+
+        .summary-box p {
+            margin: 5px 0;
+            color: #333;
+        }
+
+        .summary-box strong {
+            color: #2e5cb8;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+
+            h2 {
+                page-break-before: avoid;
+                page-break-after: avoid;
+            }
+
+            table {
+                page-break-inside: avoid;
+            }
+
+            tr {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-title">🏭 Touch and Solve</div>
+        <h1>Admin Dashboard Report</h1>
+        <div class="generated-date">Generated on: {{ generated_date }}</div>
+    </div>
+
+    <!-- Summary Section -->
+    <div class="summary-box">
+        <p><strong>Total Employees:</strong> {{ employees|length }}</p>
+        <p><strong>Total Products:</strong> {{ products|length }}</p>
+    </div>
+
+    <!-- Employees Section -->
+    <h2>Employee Management</h2>
+    {% if employees %}
+    <table>
+        <thead>
+            <tr>
+                <th>SL</th>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Salary (BDT)</th>
+                <th>Payment Status</th>
+                <th>Total Productions</th>
+                <th>Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for emp in employees %}
+            <tr>
+                <td>{{ emp.sl }}</td>
+                <td>{{ emp.name }}</td>
+                <td>{{ emp.position }}</td>
+                <td>{{ emp.phone }}</td>
+                <td>{{ emp.email }}</td>
+                <td>{{ emp.salary }}</td>
+                <td>{{ emp.payment_status|default:'Unpaid' }}</td>
+                <td>{{ emp.total_production|default:0 }}</td>
+                <td>{{ emp.rating|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-data">No employees found.</div>
+    {% endif %}
+
+    <div class="page-break"></div>
+
+    <!-- Products Section -->
+    <h2>Product Management</h2>
+    {% if products %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price (BDT)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for prod in products %}
+            <tr>
+                <td>{{ prod.sl }}</td>
+                <td>{{ prod.name }}</td>
+                <td>{{ prod.price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-data">No products found.</div>
+    {% endif %}
+
+    <!-- Footer -->
+    <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #999; font-size: 12px;">
+        <p>This is an automated report generated from the Admin Dashboard.</p>
+        <p>© 2026 Touch and Solve - All Rights Reserved</p>
+    </div>
+</body>
+</html>

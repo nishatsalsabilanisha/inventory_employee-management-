@@ -1,0 +1,184 @@
+{% load static %}
+<aside class="app-sidebar" id="appSidebar">
+  <div class="sidebar-brand">
+    <img src="{% static 'images/logo.jpg' %}" alt="Touch and Solve" class="me-2 rounded" style="height:28px;width:auto;">
+    <span class="fw-bold">Touch and Solve</span>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="sidebar-avatar">{{ user_initial|default:"?" }}</div>
+    <div>
+      <div class="sidebar-user-name">{{ user_name|default:"Guest" }}</div>
+      <div class="sidebar-user-role">{{ user_role|title|default:"" }}</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    {% if user_role == "admin" %}
+      <div class="sidebar-section-label">Overview</div>
+      <a href="{% url 'admin_redirect' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_redirect' %}active{% endif %}">
+        <i class="fas fa-chart-pie"></i><span>Dashboard</span>
+      </a>
+
+      <div class="sidebar-section-label">People</div>
+      <a href="{% url 'employee_data' %}" class="sidebar-link {% if 'employee' in request.resolver_match.url_name and request.resolver_match.url_name != 'employee_add' %}active{% endif %}">
+        <i class="fas fa-users"></i><span>Employees</span>
+      </a>
+      <a href="{% url 'department_list' %}" class="sidebar-link {% if 'department' in request.resolver_match.url_name or 'job_position' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-building"></i><span>Departments</span>
+      </a>
+      <a href="{% url 'customer_list' %}" class="sidebar-link {% if 'customer' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-user-friends"></i><span>Customers</span>
+      </a>
+
+      <div class="sidebar-section-label">Catalog &amp; Sales</div>
+      <a href="{% url 'product_data' %}" class="sidebar-link {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-box"></i><span>Products</span>
+      </a>
+      <a href="{% url 'inventory_list' %}" class="sidebar-link {% if 'inventory' in request.resolver_match.url_name or request.resolver_match.url_name == 'stock_update' %}active{% endif %}">
+        <i class="fas fa-boxes"></i><span>Inventory</span>
+      </a>
+      <a href="{% url 'admin_order_list' %}" class="sidebar-link {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-shopping-bag"></i><span>Orders</span>
+      </a>
+
+      <div class="sidebar-section-label">Attendance</div>
+      <a href="{% url 'attendance_list' %}" class="sidebar-link {% if request.resolver_match.url_name == 'attendance_list' %}active{% endif %}">
+        <i class="fas fa-list"></i><span>Attendance List</span>
+      </a>
+      <a href="{% url 'daily_attendance' %}" class="sidebar-link {% if request.resolver_match.url_name == 'daily_attendance' %}active{% endif %}">
+        <i class="fas fa-calendar-day"></i><span>Daily Attendance</span>
+      </a>
+      <a href="{% url 'monthly_attendance' %}" class="sidebar-link {% if request.resolver_match.url_name == 'monthly_attendance' %}active{% endif %}">
+        <i class="fas fa-calendar-alt"></i><span>Monthly Attendance</span>
+      </a>
+      <a href="{% url 'office_ip_list' %}" class="sidebar-link {% if 'office_ip' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-network-wired"></i><span>Office IPs</span>
+      </a>
+
+      <div class="sidebar-section-label">Leave &amp; Payroll</div>
+      <a href="{% url 'admin_leave_list' %}" class="sidebar-link {% if 'leave' in request.resolver_match.url_name and request.resolver_match.url_name != 'admin_leave_balance' and request.resolver_match.url_name != 'admin_leave_deductions' %}active{% endif %}">
+        <i class="fas fa-calendar-alt"></i><span>Leave Requests</span>
+      </a>
+      <a href="{% url 'admin_leave_balance' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_leave_balance' %}active{% endif %}">
+        <i class="fas fa-calendar-check"></i><span>Leave Balance</span>
+      </a>
+      <a href="{% url 'admin_leave_deductions' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_leave_deductions' %}active{% endif %}">
+        <i class="fas fa-file-invoice-dollar"></i><span>Leave Deductions</span>
+      </a>
+      <a href="{% url 'admin_payroll' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_payroll' %}active{% endif %}">
+        <i class="fas fa-money-bill-wave"></i><span>Payroll</span>
+      </a>
+      <a href="{% url 'salary_payment_history' %}" class="sidebar-link {% if request.resolver_match.url_name == 'salary_payment_history' %}active{% endif %}">
+        <i class="fas fa-file-invoice-dollar"></i><span>Salary History</span>
+      </a>
+      <a href="{% url 'payment_transactions_list' %}" class="sidebar-link {% if 'transaction' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-history"></i><span>Transaction History</span>
+      </a>
+
+      <div class="sidebar-section-label">Communication</div>
+      <a href="{% url 'announcement_list' %}" class="sidebar-link {% if 'announcement' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-bullhorn"></i><span>Announcements</span>
+      </a>
+
+      <div class="sidebar-section-label">Reports</div>
+      <a href="{% url 'report_employee' %}" class="sidebar-link {% if request.resolver_match.url_name == 'report_employee' %}active{% endif %}">
+        <i class="fas fa-users"></i><span>Employee Report</span>
+      </a>
+      <a href="{% url 'report_attendance' %}" class="sidebar-link {% if request.resolver_match.url_name == 'report_attendance' or request.resolver_match.url_name == 'attendance_report' %}active{% endif %}">
+        <i class="fas fa-calendar-check"></i><span>Attendance Report</span>
+      </a>
+      <a href="{% url 'report_leave' %}" class="sidebar-link {% if request.resolver_match.url_name == 'report_leave' %}active{% endif %}">
+        <i class="fas fa-calendar-alt"></i><span>Leave Report</span>
+      </a>
+      <a href="{% url 'report_payroll' %}" class="sidebar-link {% if request.resolver_match.url_name == 'report_payroll' %}active{% endif %}">
+        <i class="fas fa-money-bill-wave"></i><span>Payroll Report</span>
+      </a>
+      <a href="{% url 'report_sales' %}" class="sidebar-link {% if request.resolver_match.url_name == 'report_sales' %}active{% endif %}">
+        <i class="fas fa-chart-line"></i><span>Sales Report</span>
+      </a>
+      <a href="{% url 'report_orders' %}" class="sidebar-link {% if request.resolver_match.url_name == 'report_orders' %}active{% endif %}">
+        <i class="fas fa-shopping-bag"></i><span>Order Report</span>
+      </a>
+      <a href="{% url 'report_inventory' %}" class="sidebar-link {% if request.resolver_match.url_name == 'report_inventory' %}active{% endif %}">
+        <i class="fas fa-boxes"></i><span>Inventory Report</span>
+      </a>
+      <div class="sidebar-divider"></div>
+      <a href="{% url 'admin_logout' %}" class="sidebar-link text-danger">
+        <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+      </a>
+
+    {% elif user_role == "employee" %}
+      <div class="sidebar-section-label">Overview</div>
+      <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+      </a>
+
+      <div class="sidebar-section-label">My Work</div>
+      <a href="{% url 'employee_production' %}" class="sidebar-link {% if 'production' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-industry"></i><span>Production</span>
+      </a>
+      <a href="{% url 'attendance_history' %}" class="sidebar-link {% if 'attendance' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-calendar-check"></i><span>Attendance</span>
+      </a>
+      <a href="{% url 'leave_history' %}" class="sidebar-link {% if 'leave' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-calendar-alt"></i><span>Leave</span>
+      </a>
+
+      <div class="sidebar-section-label">Account</div>
+      <a href="{% url 'employee_profile' %}" class="sidebar-link {% if 'profile' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-user"></i><span>My Profile</span>
+      </a>
+      <a href="{% url 'employee_salary_history' %}" class="sidebar-link {% if 'salary' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-money-bill-wave"></i><span>My Salary</span>
+      </a>
+      <a href="{% url 'employee_change_password' %}" class="sidebar-link {% if 'change_password' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-key"></i><span>Change Password</span>
+      </a>
+      <div class="sidebar-divider"></div>
+      <a href="{% url 'logout' %}" class="sidebar-link text-danger">
+        <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+      </a>
+
+    {% elif user_role == "customer" %}
+      <a href="{% url 'customer_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'customer_dashboard' %}active{% endif %}">
+        <i class="fas fa-store"></i><span>Shop</span>
+      </a>
+      <a href="{% url 'customer_profile' %}" class="sidebar-link {% if 'profile' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-user"></i><span>My Profile</span>
+      </a>
+      <a href="{% url 'orders_html' %}" class="sidebar-link {% if request.resolver_match.url_name == 'orders_html' %}active{% endif %}">
+        <i class="fas fa-shopping-bag"></i><span>My Orders</span>
+      </a>
+      <div class="sidebar-divider"></div>
+      <a href="{% url 'customer_logout' %}" class="sidebar-link text-danger">
+        <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+      </a>
+
+    {% else %}
+      <a href="{% url 'index' %}" class="sidebar-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+        <i class="fas fa-home"></i><span>Home</span>
+      </a>
+      <a href="{% url 'about' %}" class="sidebar-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">
+        <i class="fas fa-info-circle"></i><span>About</span>
+      </a>
+      <a href="{% url 'product_list' %}" class="sidebar-link {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-box"></i><span>Products</span>
+      </a>
+      <div class="sidebar-divider"></div>
+      <a href="{% url 'login_page' %}" class="sidebar-link">
+        <i class="fas fa-sign-in-alt"></i><span>Employee Login</span>
+      </a>
+      <a href="{% url 'customer_login_page' %}" class="sidebar-link">
+        <i class="fas fa-user"></i><span>Customer Login</span>
+      </a>
+      <a href="{% url 'admin_login' %}" class="sidebar-link">
+        <i class="fas fa-lock"></i><span>Admin Login</span>
+      </a>
+    {% endif %}
+  </nav>
+
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="document.getElementById('appSidebar').classList.toggle('collapsed')">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>

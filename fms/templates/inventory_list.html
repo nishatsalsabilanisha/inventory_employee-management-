@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fas fa-boxes me-2" style="color:#0ea5e9;"></i>Inventory / Stock</h2>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#0ea5e9;">{{ summary.total }}</h4>
+      <small class="text-muted">Total Products</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#28a745;">{{ summary.available }}</h4>
+      <small class="text-muted">In Stock</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#ffc107;">{{ summary.low }}</h4>
+      <small class="text-muted">Low Stock</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#dc3545;">{{ summary.out }}</h4>
+      <small class="text-muted">Out of Stock</small>
+    </div>
+  </div>
+</div>
+
+{% if summary.low or summary.out %}
+<div class="alert alert-warning d-flex align-items-center" role="alert">
+  <i class="fas fa-exclamation-triangle me-2"></i>
+  <strong>Low Stock Alert:</strong>
+  <span class="ms-2">{{ summary.low }} product(s) are running low and {{ summary.out }} product(s) are out of stock.</span>
+</div>
+{% endif %}
+
+<form method="get" class="card card-custom mb-4">
+  <div class="card-body py-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold mb-1">Search</label>
+        <div class="input-group">
+          <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Product name...">
+          <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold mb-1">Stock Status</label>
+        <select name="stock" class="form-select" onchange="this.form.submit()">
+          <option value="">All</option>
+          <option value="available" {% if stock_status == 'available' %}selected{% endif %}>Available</option>
+          <option value="low" {% if stock_status == 'low' %}selected{% endif %}>Low Stock</option>
+          <option value="out" {% if stock_status == 'out' %}selected{% endif %}>Out of Stock</option>
+        </select>
+      </div>
+      <div class="col-auto ms-auto">
+        <a href="{% url 'stock_update' 0 %}" class="btn btn-outline-primary disabled d-none"></a>
+        <a href="{% url 'inventory_history' %}" class="btn btn-outline-primary"><i class="fas fa-history me-1"></i>Inventory History</a>
+        <a href="{% url 'report_inventory' %}" class="btn btn-outline-primary"><i class="fas fa-chart-bar me-1"></i>Inventory Report</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="card card-custom">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th class="text-end">Price</th>
+            <th class="text-center">Stock</th>
+            <th class="text-center">Threshold</th>
+            <th>Status</th>
+            <th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products %}
+          <tr>
+            <td class="fw-semibold">{{ p.name }}</td>
+            <td class="small text-muted">{{ p.category }} / {{ p.subcategory }}</td>
+            <td class="text-end">৳{{ p.price|floatformat:2 }}</td>
+            <td class="text-center fw-bold {% if p.is_out_of_stock %}text-danger{% elif p.is_low_stock %}text-warning{% else %}text-success{% endif %}">{{ p.stock }}</td>
+            <td class="text-center text-muted">{{ p.low_stock_threshold }}</td>
+            <td>
+              {% if p.is_out_of_stock %}
+                <span class="badge bg-danger">Out of Stock</span>
+              {% elif p.is_low_stock %}
+                <span class="badge bg-warning text-dark">Low Stock</span>
+              {% else %}
+                <span class="badge bg-success">Available</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a href="{% url 'stock_update' p.sl %}" class="btn btn-sm btn-primary"><i class="fas fa-exchange-alt me-1"></i>Update Stock</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center text-muted py-4">No products found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

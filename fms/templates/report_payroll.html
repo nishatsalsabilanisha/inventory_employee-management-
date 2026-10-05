@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fas fa-file-alt me-2" style="color:#0ea5e9;"></i>Payroll Report</h2>
+
+<form method="get" class="card card-custom mb-4">
+  <div class="card-body py-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label small fw-semibold mb-1">Month</label>
+        <input type="month" name="month" value="{{ month }}" class="form-control" style="max-width:200px;">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold mb-1">Search</label>
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Employee name...">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i>Apply</button>
+      </div>
+      <div class="col-auto ms-auto">
+        <a href="{% url 'report_payroll' %}?month={{ month }}&q={{ q }}&export=pdf" class="btn btn-outline-danger"><i class="fas fa-file-pdf me-1"></i>PDF</a>
+        <a href="{% url 'report_payroll' %}?month={{ month }}&q={{ q }}&export=excel" class="btn btn-outline-success"><i class="fas fa-file-excel me-1"></i>Excel</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0">{{ summary.count }}</h4>
+      <small class="text-muted">Payments</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#0ea5e9;">৳{{ summary.basic|floatformat:0 }}</h4>
+      <small class="text-muted">Basic Total</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#dc3545;">৳{{ summary.leave_deduction|floatformat:0 }}</h4>
+      <small class="text-muted">Leave Deduction</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#dc3545;">৳{{ summary.attendance_deduction|floatformat:0 }}</h4>
+      <small class="text-muted">Attendance Deduction</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#28a745;">৳{{ summary.overtime|floatformat:0 }}</h4>
+      <small class="text-muted">Overtime</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#28a745;">৳{{ summary.final|floatformat:0 }}</h4>
+      <small class="text-muted">Total Paid</small>
+    </div>
+  </div>
+</div>
+
+<div class="card card-custom">
+  <div class="card-header bg-transparent fw-bold">Salary Payments - {{ month }}</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Employee</th>
+            <th>Employee ID</th>
+            <th class="text-end">Basic</th>
+            <th class="text-end">Leave Ded.</th>
+            <th class="text-end">Attn Ded.</th>
+            <th class="text-center">OT Hours</th>
+            <th class="text-end">OT Amount</th>
+            <th class="text-end">Other Ded.</th>
+            <th class="text-end">Bonus</th>
+            <th class="text-end">Final</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in payments %}
+          <tr>
+            <td class="fw-semibold">{{ p.employee_profile.employee.name }}</td>
+            <td class="small text-muted">{{ p.employee_profile.public_id }}</td>
+            <td class="text-end">৳{{ p.basic_salary|floatformat:2 }}</td>
+            <td class="text-end text-danger">৳{{ p.leave_deduction|floatformat:2 }}</td>
+            <td class="text-end text-danger">৳{{ p.attendance_deduction|floatformat:2 }}</td>
+            <td class="text-center">{{ p.overtime_hours|floatformat:1 }}</td>
+            <td class="text-end text-success">৳{{ p.overtime_amount|floatformat:2 }}</td>
+            <td class="text-end text-danger">৳{{ p.other_deduction|floatformat:2 }}</td>
+            <td class="text-end text-success">৳{{ p.bonus|floatformat:2 }}</td>
+            <td class="text-end fw-bold" style="color:#0ea5e9;">৳{{ p.final_salary|floatformat:2 }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="10" class="text-center text-muted py-4">No salary payments for this month.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

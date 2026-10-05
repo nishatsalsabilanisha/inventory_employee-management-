@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid px-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h2 fw-bold mb-1">Production</h1>
+      <p class="text-muted mb-0">Record the items you produced today — they are added to product stock automatically.</p>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- ===== RECORD PRODUCTION ===== -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3"><i class="fas fa-industry me-2 text-primary"></i>Record Today's Production</h6>
+
+          {% if today_record %}
+            <div class="alert alert-success small mb-3">
+              <i class="fas fa-check-circle me-1"></i>
+              You already recorded <strong>{{ today_record.quantity }}</strong> unit(s) of
+              <strong>{{ today_record.product.name|default:"—" }}</strong> today
+              ({{ today_record.date|date:"M d, Y" }}).
+              <form method="POST" action="{% url 'employee_production_delete' today_record.pk %}" class="d-inline"
+                    onsubmit="return confirm('Delete this production record? Stock will be adjusted.')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-link btn-sm text-danger p-0 ms-1">Remove record</button>
+              </form>
+            </div>
+          {% else %}
+            <form method="POST">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label class="form-label fw-semibold">{{ form.product.label }}</label>
+                {{ form.product }}
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">{{ form.quantity.label }}</label>
+                {{ form.quantity }}
+              </div>
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-save me-1"></i>Save Production
+              </button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PRODUCTION HISTORY ===== -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3"><i class="fas fa-history me-2 text-primary"></i>My Production History</h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for rec in history %}
+                  <tr>
+                    <td class="small">{{ rec.date|date:"M d, Y" }}</td>
+                    <td class="small">{{ rec.product.name|default:"—" }}</td>
+                    <td class="small">{{ rec.quantity }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="3" class="text-center text-muted py-4">No production records yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

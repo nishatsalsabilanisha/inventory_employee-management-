@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fas fa-history me-2" style="color:#0ea5e9;"></i>Inventory History</h2>
+
+<form method="get" class="card card-custom mb-4">
+  <div class="card-body py-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold mb-1">Search Product</label>
+        <div class="input-group">
+          <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Product name...">
+          <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold mb-1">Transaction Type</label>
+        <select name="type" class="form-select" onchange="this.form.submit()">
+          <option value="">All Types</option>
+          {% for value, label in types %}
+            <option value="{{ value }}" {% if ttype == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto ms-auto">
+        <a href="{% url 'inventory_list' %}" class="btn btn-outline-primary"><i class="fas fa-boxes me-1"></i>Back to Inventory</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="card card-custom">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Date</th>
+            <th>Product</th>
+            <th>Type</th>
+            <th class="text-end">Qty</th>
+            <th class="text-end">Previous</th>
+            <th class="text-end">New</th>
+            <th>Reason</th>
+            <th>Performed By</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td class="small">{{ log.created_at|date:"Y-m-d H:i" }}</td>
+            <td class="fw-semibold">{{ log.product.name }}</td>
+            <td>
+              {% if log.transaction_type == "increase" %}
+                <span class="badge bg-success">Increase</span>
+              {% elif log.transaction_type == "decrease" %}
+                <span class="badge bg-danger">Decrease</span>
+              {% else %}
+                <span class="badge bg-info text-dark">Adjustment</span>
+              {% endif %}
+            </td>
+            <td class="text-end fw-bold">{{ log.quantity }}</td>
+            <td class="text-end text-muted">{{ log.previous_stock }}</td>
+            <td class="text-end fw-bold" style="color:#0ea5e9;">{{ log.new_stock }}</td>
+            <td class="small text-muted">{{ log.reason|default:"--" }}</td>
+            <td class="small">{{ log.performed_by|default:"--" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center text-muted py-4">No inventory transactions found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

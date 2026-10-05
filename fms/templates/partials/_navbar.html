@@ -1,0 +1,120 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm">
+  <div class="container">
+   <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="{% url 'index' %}">
+     <img src="{% static 'images/logo.jpg' %}" alt="Touch and Solve" class="me-2 rounded" style="height:36px;width:auto;">
+     <span style="color: #ff1493 !important;">Touch and Solve</span>
+   </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-lg-center">
+
+        <!-- PUBLIC LINKS -->
+        <li class="nav-item">
+          <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'index' %}">
+            <i class="fas fa-home me-1"></i>Home
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if '/about' in request.path %}active{% endif %}" href="{% url 'about' %}">
+            <i class="fas fa-info-circle me-1"></i>About
+          </a>
+        </li>
+
+        {% if not user_role %}
+          <!-- NOT LOGGED IN -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              <i class="fas fa-sign-in-alt me-1"></i>Login
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+              <li><a class="dropdown-item" href="{% url 'login_page' %}"><i class="fas fa-user-tie me-2"></i>Employee</a></li>
+              <li><a class="dropdown-item" href="{% url 'customer_login_page' %}"><i class="fas fa-user me-2"></i>Customer</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{% url 'admin_login' %}"><i class="fas fa-lock me-2"></i>Admin</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              <i class="fas fa-user-plus me-1"></i>Register
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+              <li><a class="dropdown-item" href="{% url 'customer_register_page' %}"><i class="fas fa-user me-2"></i>Customer</a></li>
+            </ul>
+          </li>
+        {% endif %}
+
+        {% if user_role == "employee" %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}"><i class="fas fa-chart-bar me-1"></i>Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'employee_production' %}"><i class="fas fa-industry me-1"></i>Production</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'employee_profile' %}"><i class="fas fa-id-card me-1"></i>Profile</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'attendance_history' %}"><i class="fas fa-calendar-check me-1"></i>Attendance</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              <i class="fas fa-cogs me-1"></i>More
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+              <li><a class="dropdown-item" href="{% url 'product_list' %}"><i class="fas fa-box me-2"></i>Products</a></li>
+              <li><a class="dropdown-item" href="{% url 'employee_bonus' %}"><i class="fas fa-gift me-2"></i>Bonus</a></li>
+            </ul>
+          </li>
+        {% endif %}
+
+        {% if user_role == "customer" %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'customer_dashboard' %}"><i class="fas fa-store me-1"></i>Shop</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'orders_html' %}"><i class="fas fa-shopping-bag me-1"></i>Orders</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'customer_profile' %}"><i class="fas fa-user me-1"></i>Profile</a></li>
+          <li class="nav-item">
+            <a class="nav-link position-relative" href="{% url 'checkout' %}">
+              <i class="fas fa-shopping-cart me-1"></i>Cart
+            </a>
+          </li>
+        {% endif %}
+
+        {% if user_role == "admin" %}
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              <i class="fas fa-tachometer-alt me-1"></i>Admin
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+              <li><a class="dropdown-item" href="{% url 'admin_redirect' %}"><i class="fas fa-chart-pie me-2"></i>Dashboard</a></li>
+              <li><a class="dropdown-item" href="{% url 'employee_list' %}"><i class="fas fa-users me-2"></i>Employees</a></li>
+              <li><a class="dropdown-item" href="{% url 'customer_list' %}"><i class="fas fa-user-friends me-2"></i>Customers</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{% url 'product_list' %}"><i class="fas fa-box me-2"></i>Products</a></li>
+              <li><a class="dropdown-item" href="{% url 'payment_transactions_list' %}"><i class="fas fa-credit-card me-2"></i>Payments</a></li>
+            </ul>
+          </li>
+        {% endif %}
+
+        {% if user_role %}
+          <!-- LOGGED IN - User menu -->
+          <li class="nav-item dropdown ms-lg-2">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+              <span class="user-avatar rounded-circle d-inline-flex align-items-center justify-content-center me-2">{{ user_initial }}</span>
+              <span class="d-none d-lg-inline">{{ user_name|truncatechars:15 }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+              <li class="dropdown-header text-muted small">{{ user_name }}</li>
+              <li><hr class="dropdown-divider"></li>
+              {% if user_role == "employee" %}
+                <li><a class="dropdown-item" href="{% url 'employee_profile' %}"><i class="fas fa-user-cog me-2"></i>My Profile</a></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+              {% elif user_role == "customer" %}
+                <li><a class="dropdown-item" href="{% url 'customer_profile' %}"><i class="fas fa-user-cog me-2"></i>My Profile</a></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'customer_logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+              {% elif user_role == "admin" %}
+                <li><a class="dropdown-item text-danger" href="{% url 'admin_logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+              {% endif %}
+            </ul>
+          </li>
+        {% endif %}
+
+      </ul>
+    </div>
+  </div>
+</nav>

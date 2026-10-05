@@ -1,0 +1,241 @@
+{% extends "base.html" %} {% load static %} {% block content %}
+
+<style>
+  body {
+    background: #f5f5f5;
+  }
+
+  .checkout-container {
+    width: 95%;
+    max-width: 1300px;
+    margin: 30px auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+  }
+
+  .checkout-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  .checkout-card h3 {
+    margin-bottom: 20px;
+    color: #38bdf8;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+  }
+
+  .payment-box {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    cursor: pointer;
+  }
+
+  .payment-box:hover {
+    border-color: #38bdf8;
+  }
+
+  .payment-box input {
+    margin-right: 10px;
+  }
+
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .summary-total {
+    font-size: 20px;
+    font-weight: bold;
+    color: #38bdf8;
+  }
+
+  .place-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    background: #38bdf8;
+    color: white;
+    font-size: 17px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .place-btn:hover {
+    background: #1458d4;
+  }
+
+  .cart-product {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eee;
+  }
+
+  @media (max-width: 900px) {
+    .checkout-container {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="checkout-container">
+  <!-- LEFT -->
+  <form method="POST" action="{% url 'checkout' %}" id="checkout-form">
+  {% csrf_token %}
+    <div class="checkout-card">
+      <h3>Billing Information</h3>
+
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" name="name" value="{{ customer.name }}" required />
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" value="{{ customer.email }}" required />
+      </div>
+
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" name="phone" value="{{ customer.phone }}" required />
+      </div>
+
+      <div class="form-group">
+        <label>Division</label>
+        <select name="division">
+          <option>Select Division</option>
+          <option>Dhaka</option>
+          <option>Chattogram</option>
+          <option>Khulna</option>
+          <option>Rajshahi</option>
+          <option>Sylhet</option>
+          <option>Barisal</option>
+          <option>Rangpur</option>
+          <option>Mymensingh</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>District</label>
+        <input type="text" name="district" placeholder="District" />
+      </div>
+
+      <div class="form-group">
+        <label>Postal Code</label>
+        <input type="text" name="postal" />
+      </div>
+
+      <div class="form-group">
+        <label>Country</label>
+        <input type="text" value="Bangladesh" readonly />
+      </div>
+      <div class="form-group">
+        <label>Address Line 1</label>
+        <input type="text" name="address1" placeholder="Street Address" required />
+      </div>
+
+      <h3 style="margin-top: 30px">Payment Method</h3>
+
+      <div class="payment-box">
+        <label>
+          <input type="radio" name="payment" value="ssl" checked />
+          SSLCommerz
+          <br />
+          <small> Credit Card / Debit Card / bKash / Nagad / Rocket </small>
+        </label>
+      </div>
+
+      <div class="payment-box">
+        <label>
+          <input type="radio" name="payment" value="cod" />
+          Cash On Delivery
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label>Order Notes</label>
+        <textarea name="notes" rows="4" placeholder="Add notes (optional)"></textarea>
+      </div>
+    </div>
+  </form>
+
+  <!-- RIGHT -->
+  <div class="checkout-card">
+    <h3>Order Summary</h3>
+
+    <div class="alert alert-warning py-2 small">
+      <i class="fas fa-info-circle me-1"></i>Maximum 7 items per order.
+    </div>
+
+    {% for item in cart_items %}
+    <div class="cart-product">
+      <div>
+        <b>{{ item.product.name }}</b>
+        {% if item.color or item.size or item.textile %}
+        <br />
+        <small class="text-muted d-block">{{ item.color|default:"-" }} / {{ item.size|default:"-" }} / {{ item.textile|default:"-" }}</small>
+        {% endif %}
+        <small class="text-muted d-block mb-1">৳{{ item.price }} x {{ item.quantity }}</small>
+        <form method="POST" action="{% url 'update_cart' item.id %}" style="display:inline-flex;align-items:center;gap:6px;">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'checkout' %}">
+          <button type="submit" name="quantity" value="{{ item.quantity|add:-1 }}" class="btn btn-sm btn-outline-danger px-2 py-0" {% if item.quantity <= 1 %}disabled{% endif %}>&minus;</button>
+          <span class="fw-bold mx-1">{{ item.quantity }}</span>
+          <button type="submit" name="quantity" value="{{ item.quantity|add:1 }}" class="btn btn-sm btn-outline-success px-2 py-0">+</button>
+        </form>
+      </div>
+      <div>৳{{ item.subtotal }}</div>
+    </div>
+    {% endfor %}
+
+    <hr />
+
+    <div class="summary-item">
+      <span>Subtotal</span>
+      <span>৳{{ cart_total }}</span>
+    </div>
+
+    <div class="summary-item">
+      <span>Shipping</span>
+      <span>৳0</span>
+    </div>
+
+    <hr />
+
+    <div class="summary-item summary-total">
+      <span>Total</span>
+      <span>৳{{ cart_total }}</span>
+    </div>
+
+    <br />
+    <button type="submit" form="checkout-form" class="place-btn">Place Order</button>
+  </div>
+</div>
+
+{% endblock %}

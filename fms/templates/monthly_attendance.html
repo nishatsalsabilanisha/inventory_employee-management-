@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fas fa-calendar-alt me-2" style="color:#0ea5e9;"></i>Monthly Attendance</h2>
+
+<form method="get" class="card card-custom mb-4">
+  <div class="card-body py-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label small fw-semibold mb-1">Month</label>
+        <input type="month" name="month" value="{{ month }}" class="form-control" style="max-width:220px;">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-search me-1"></i>View</button>
+      </div>
+      <div class="col-auto ms-auto">
+        <a href="{% url 'daily_attendance' %}" class="btn btn-outline-primary"><i class="fas fa-calendar-day me-1"></i>Daily View</a>
+        <a href="{% url 'attendance_report' %}?month={{ month }}" class="btn btn-outline-primary"><i class="fas fa-chart-bar me-1"></i>Status Report</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#28a745;">{{ summary.present }}</h4>
+      <small class="text-muted">Present</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#ffc107;">{{ summary.late }}</h4>
+      <small class="text-muted">Late</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#17a2b8;">{{ summary.leave }}</h4>
+      <small class="text-muted">Leave</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#dc3545;">{{ summary.absent }}</h4>
+      <small class="text-muted">Absent</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#0ea5e9;">{{ summary.percentage }}%</h4>
+      <small class="text-muted">Attendance %</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0">{{ summary.expected }}</h4>
+      <small class="text-muted">Expected Days</small>
+    </div>
+  </div>
+</div>
+
+<div class="card card-custom">
+  <div class="card-header bg-transparent fw-bold">Attendance Grid - {{ month }}</div>
+  <div class="card-body p-0">
+    <div class="table-responsive" style="max-height:600px;">
+      <table class="table table-bordered table-sm align-middle mb-0">
+        <thead class="table-light" style="position:sticky;top:0;background:#f8f9fa;z-index:2;">
+          <tr>
+            <th style="min-width:150px;">Employee</th>
+            {% for d in days %}
+              <th class="text-center small" style="min-width:28px;">{{ d.day }}</th>
+            {% endfor %}
+            <th class="text-center">P</th>
+            <th class="text-center">L</th>
+            <th class="text-center">LV</th>
+            <th class="text-center">A</th>
+            <th class="text-center">%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>
+              <span class="fw-semibold small">{{ row.profile.employee.name }}</span>
+              <div class="small text-muted">{{ row.profile.public_id }}</div>
+            </td>
+            {% for cell in row.cells %}
+              <td class="text-center small">
+                {% if cell == "P" %}
+                  <span class="text-success fw-bold">P</span>
+                {% elif cell == "L" %}
+                  <span class="text-warning fw-bold">L</span>
+                {% elif cell == "LV" %}
+                  <span class="text-info fw-bold">LV</span>
+                {% elif cell == "A" %}
+                  <span class="text-danger fw-bold">A</span>
+                {% elif cell == "U" %}
+                  <span class="text-muted fw-bold" title="Upcoming">-</span>
+                {% else %}
+                  <span class="text-muted">&middot;</span>
+                {% endif %}
+              </td>
+            {% endfor %}
+            <td class="text-center text-success fw-bold">{{ row.present }}</td>
+            <td class="text-center text-warning fw-bold">{{ row.late }}</td>
+            <td class="text-center text-info fw-bold">{{ row.leave }}</td>
+            <td class="text-center text-danger fw-bold">{{ row.absent }}</td>
+            <td class="text-center fw-bold" style="color:#0ea5e9;">{{ row.percentage }}%</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="{{ days|length|add:7 }}" class="text-center text-muted py-4">No employees found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer bg-transparent small text-muted">
+      <span class="text-success fw-bold">P</span> Present &nbsp; <span class="text-warning fw-bold">L</span> Late &nbsp;
+      <span class="text-info fw-bold">LV</span> Leave &nbsp; <span class="text-danger fw-bold">A</span> Absent &nbsp;
+      <span class="text-muted fw-bold">-</span> Upcoming &nbsp; <span class="text-muted">&middot;</span> Weekly Holiday
+    </div>
+  </div>
+</div>
+{% endblock %}

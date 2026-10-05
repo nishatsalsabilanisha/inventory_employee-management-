@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="card card-custom" id="slipCard">
+          <div class="card-body p-4">
+            <div class="text-center mb-4">
+              <h4 class="fw-bold mb-0" style="color:#0ea5e9;">Touch and Solve</h4>
+              <small class="text-muted">Employee Salary Slip</small>
+            </div>
+            <hr>
+            <div class="row small mb-3">
+              <div class="col-6">
+                <div><span class="text-muted">Employee Name:</span> <span class="fw-semibold">{{ payment.employee_profile.employee.name }}</span></div>
+                <div><span class="text-muted">Employee ID:</span> {{ payment.employee_profile.public_id }}</div>
+              </div>
+              <div class="col-6 text-end">
+                <div><span class="text-muted">Salary Month:</span> {{ payment.salary_month }}</div>
+                <div><span class="text-muted">Payment Date:</span> {{ payment.payment_date|date:"M d, Y" }} {{ payment.payment_time|time:"h:i A" }}</div>
+              </div>
+            </div>
+            <table class="table table-sm table-bordered mb-4">
+              <tbody>
+                <tr><th class="small text-muted w-50">Basic Salary</th><td class="text-end">৳{{ payment.basic_salary|floatformat:2 }}</td></tr>
+                <tr><th class="small text-muted">Paid Leave</th><td class="text-end">{{ payment.paid_leave }} days</td></tr>
+                <tr><th class="small text-muted">Leave Without Pay</th><td class="text-end">{{ payment.lwp }} days</td></tr>
+                <tr><th class="small text-muted">Leave Deduction</th><td class="text-end text-danger">- ৳{{ payment.leave_deduction|floatformat:2 }}</td></tr>
+                <tr><th class="small text-muted">Attendance Deduction</th><td class="text-end text-danger">{% if payment.attendance_deduction %}- ৳{{ payment.attendance_deduction|floatformat:2 }}{% else %}<span class="text-muted">--</span>{% endif %}</td></tr>
+                <tr><th class="small text-muted">Overtime</th><td class="text-end text-success">{% if payment.overtime_amount %}+ ৳{{ payment.overtime_amount|floatformat:2 }} <span class="text-muted">({{ payment.overtime_hours|floatformat:1 }} hrs)</span>{% else %}<span class="text-muted">--</span>{% endif %}</td></tr>
+                <tr><th class="small text-muted">Other Deduction</th><td class="text-end text-danger">{% if payment.other_deduction %}- ৳{{ payment.other_deduction|floatformat:2 }}{% else %}<span class="text-muted">--</span>{% endif %}</td></tr>
+                <tr><th class="small text-muted">Bonus</th><td class="text-end text-success">{% if payment.bonus %}+ ৳{{ payment.bonus|floatformat:2 }}{% else %}<span class="text-muted">--</span>{% endif %}</td></tr>
+                <tr class="table-primary">
+                  <th class="small">Final Salary Paid</th>
+                  <td class="text-end fw-bold fs-5" style="color:#0ea5e9;">৳{{ payment.final_salary|floatformat:2 }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="row small text-muted">
+              <div class="col-6">Payment Method: <span class="fw-semibold text-dark">{{ payment.payment_method }}</span></div>
+              <div class="col-6 text-end">Paid By: <span class="fw-semibold text-dark">{{ payment.paid_by|default:"-" }}</span></div>
+            </div>
+            <div class="d-flex justify-content-center gap-2 mt-4 no-print">
+              <button type="button" class="btn btn-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>Print Slip</button>
+              <a href="javascript:history.back()" class="btn btn-outline-secondary">Back</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <style>
+      @media print {
+        .no-print, .app-sidebar, .app-topbar, footer { display: none !important; }
+        body { background: #fff !important; }
+      }
+    </style>
+{% endblock %}

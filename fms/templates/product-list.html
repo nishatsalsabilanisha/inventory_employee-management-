@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Products | Touch and Solve{% endblock %}
+{% block content %}
+<style>
+  .cat-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; color: #334155; font-weight: 600; font-size: 0.92rem; transition: all .2s; }
+  .cat-link:hover { background: #f1f5f9; color: #0ea5e9; }
+  .cat-link.active { background: #e0f2fe; color: #0369a1; }
+  .subcat-chip { display: inline-block; padding: 5px 14px; border-radius: 999px; border: 1px solid #e2e8f0; color: #475569; font-size: 0.8rem; font-weight: 600; transition: all .2s; }
+  .subcat-chip:hover { border-color: #0ea5e9; color: #0ea5e9; }
+  .subcat-chip.active { background: #0ea5e9; border-color: #0ea5e9; color: #fff; }
+  .prod-card {
+    border: 1px solid #eef2f7; border-radius: 14px; overflow: hidden; background: #fff;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06); transition: all .25s ease; height: 100%;
+  }
+  .prod-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12); }
+  .prod-img-wrap { position: relative; overflow: hidden; background: #f8fafc; }
+  .prod-img-wrap img { width: 100%; aspect-ratio: 3/4; object-fit: cover; }
+  .sale-badge { position: absolute; top: 10px; left: 10px; background: #dc2626; color: #fff; font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+  .out-badge { position: absolute; top: 10px; left: 10px; background: rgba(15, 23, 42, .75); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+  .color-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0,0,0,.15); }
+</style>
+
+<div class="row g-4">
+  <!-- Category sidebar -->
+  <div class="col-lg-3">
+    <div class="card card-custom p-2 mb-4">
+      <div class="fw-bold px-3 py-2" style="color:#0f172a;"><i class="fas fa-th-large me-2" style="color:#0ea5e9;"></i>Categories</div>
+      <a href="{% url 'product_list' %}" class="cat-link {% if not category %}active{% endif %}"><i class="fas fa-th-large" style="width:18px;"></i>All Products</a>
+      <a href="{% url 'product_list' %}?category=Menswear" class="cat-link {% if category == 'Menswear' %}active{% endif %}"><i class="fas fa-male" style="width:18px;"></i>Men</a>
+      <a href="{% url 'product_list' %}?category=Womenswear" class="cat-link {% if category == 'Womenswear' %}active{% endif %}"><i class="fas fa-female" style="width:18px;"></i>Women</a>
+      <a href="{% url 'product_list' %}?category=Kids" class="cat-link {% if category == 'Kids' %}active{% endif %}"><i class="fas fa-child" style="width:18px;"></i>Kids</a>
+      <a href="{% url 'product_list' %}?category=Activewear" class="cat-link {% if category == 'Activewear' %}active{% endif %}"><i class="fas fa-running" style="width:18px;"></i>Activewear</a>
+    </div>
+
+    {% if subcategories %}
+    <div class="card card-custom p-3 mb-4">
+      <div class="fw-bold mb-3 small text-uppercase text-muted" style="letter-spacing:1px;">Subcategories</div>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'product_list' %}?{% if category %}category={{ category }}&{% endif %}" class="subcat-chip {% if not subcategory %}active{% endif %}">All</a>
+        {% for value, label in subcategories %}
+        <a href="{% url 'product_list' %}?{% if category %}category={{ category }}&{% endif %}subcategory={{ value }}" class="subcat-chip {% if subcategory == value %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Product grid -->
+  <div class="col-lg-9">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <h4 class="fw-bold mb-0">
+        {% if subcategory %}{{ subcategory }}
+        {% elif category %}{{ category }}
+        {% else %}All Products{% endif %}
+        <span class="fs-6 text-muted fw-normal">({{ products|length }} items)</span>
+      </h4>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <form method="get" class="d-flex" style="flex:1 1 200px; max-width:300px;">
+          {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+          {% if subcategory %}<input type="hidden" name="subcategory" value="{{ subcategory }}">{% endif %}
+          <div class="input-group input-group-sm w-100">
+            <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search products...">
+            <button class="btn btn-outline-primary" type="submit"><i class="fas fa-search"></i></button>
+          </div>
+        </form>
+        <select class="form-select form-select-sm" style="min-width:170px; flex-shrink:0;" onchange="location.href='?{% if category %}category={{ category }}&{% endif %}{% if subcategory %}subcategory={{ subcategory }}&{% endif %}{% if q %}q={{ q }}&{% endif %}sort='+this.value">
+          <option value="">Sort: Featured</option>
+          <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest First</option>
+          <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+          <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+          <option value="name" {% if sort == 'name' %}selected{% endif %}>Name A-Z</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      {% for product in products %}
+      <div class="col-md-6 col-xl-4">
+        <div class="prod-card">
+          <a href="{% url 'product_detail' product.sl %}" class="d-block prod-img-wrap">
+            {% with img=product.primary_image %}
+            {% if img %}
+              <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
+            {% elif product.image %}
+              <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+            {% else %}
+              <div class="d-flex align-items-center justify-content-center" style="aspect-ratio:3/4;">
+                <i class="fas fa-tshirt fa-3x text-muted"></i>
+              </div>
+            {% endif %}
+            {% endwith %}
+            {% if product.discount_percent %}
+              <span class="sale-badge">-{{ product.discount_percent }}%</span>
+            {% endif %}
+            {% if product.status == 'Out of Stock' %}
+              <span class="out-badge">Out of Stock</span>
+            {% endif %}
+          </a>
+          <div class="p-3">
+            <div class="small text-muted mb-1">
+              {% if product.brand %}<span class="fw-semibold">{{ product.brand }}</span>{% endif %}
+              {% if product.category %}<span class="ms-1">{{ product.subcategory }}</span>{% endif %}
+            </div>
+            <a href="{% url 'product_detail' product.sl %}" class="text-decoration-none">
+              <h6 class="fw-bold mb-1" style="color:#0f172a;">{{ product.name }}</h6>
+            </a>
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="fw-bold" style="color:#0ea5e9;">৳{{ product.effective_price|floatformat:0 }}</span>
+              {% if product.discount_percent %}
+                <s class="text-muted small">৳{{ product.price|floatformat:0 }}</s>
+              {% endif %}
+            </div>
+            {% if product.colors.exists %}
+            <div class="d-flex gap-1">
+              {% for c in product.colors.all|slice:":5" %}
+                <span class="color-dot" style="background:{{ c.name|lower }};" title="{{ c.name }}"></span>
+              {% endfor %}
+              {% if product.colors.count > 5 %}<small class="text-muted">+{{ product.colors.count|add:"-5" }}</small>{% endif %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12">
+        <div class="text-center py-5">
+          <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+          <p class="text-muted">No products found{% if q %} for "{{ q }}"{% endif %}.</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

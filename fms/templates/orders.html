@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fas fa-shopping-bag me-2" style="color:#0ea5e9;"></i>My Orders</h2>
+
+<style>
+  .status-badge { font-size: 0.85rem; }
+  .cancel-form-inline { display: inline; }
+  .cancel-form-inline textarea { width: 200px; font-size: 0.8rem; }
+</style>
+
+{% for order in orders %}
+<div class="card card-custom mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <h5 class="fw-bold mb-1">Order #{{ order.id }}</h5>
+        <p class="text-muted small mb-0">Date: {{ order.created_at }}</p>
+      </div>
+      <div class="text-end">
+        {% if order.status == 'Pending' %}
+          <span class="badge bg-warning status-badge">Pending</span>
+        {% elif order.status == 'Paid' %}
+          <span class="badge bg-info status-badge">Paid</span>
+        {% elif order.status == 'In Production' %}
+          <span class="badge bg-primary status-badge">In Production</span>
+        {% elif order.status == 'Sent' %}
+          <span class="badge bg-success status-badge">Shipped</span>
+        {% elif order.status == 'Delivered' %}
+          <span class="badge status-badge" style="background:#10b981;">Delivered</span>
+        {% elif order.status == 'Cancelled' %}
+          <span class="badge bg-danger status-badge">Cancelled</span>
+        {% elif order.status == 'Returned' %}
+          <span class="badge bg-secondary status-badge">Returned</span>
+        {% else %}
+          <span class="badge bg-secondary status-badge">{{ order.status }}</span>
+        {% endif %}
+      </div>
+    </div>
+    <hr>
+    <div class="row g-3">
+      <div class="col-md-3">
+        <small class="text-muted d-block">Product</small>
+        <span class="fw-semibold">{{ order.product.name }}</span>
+        {% if order.color or order.size or order.textile %}
+        <small class="text-muted d-block">{{ order.color|default:"-" }} / {{ order.size|default:"-" }} / {{ order.textile|default:"-" }}</small>
+        {% endif %}
+      </div>
+      <div class="col-md-2">
+        <small class="text-muted d-block">Quantity</small>
+        <span class="fw-semibold">{{ order.quantity }}</span>
+      </div>
+      <div class="col-md-3">
+        <small class="text-muted d-block">Payment Method</small>
+        <span class="fw-semibold">{{ order.payment_method }}</span>
+      </div>
+      <div class="col-md-2">
+        <small class="text-muted d-block">Total Amount</small>
+        <span class="fw-semibold">৳{{ order.total_amount }}</span>
+      </div>
+      <div class="col-md-2">
+        {% if order.payment_method == "SSLCommerz" and order.payment_status != "Paid" %}
+        <a href="{% url 'retry_payment_transaction' order.id %}" class="btn btn-sm btn-primary mt-2">
+          <i class="fas fa-credit-card me-1"></i>Pay Now
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <hr>
+    <div class="d-flex gap-2 flex-wrap">
+      {% if order.status == 'Pending' %}
+        <form method="POST" action="{% url 'customer_cancel_order' order.id %}" class="cancel-form-inline" onsubmit="return confirm('Cancel this order?')">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-danger">
+            <i class="fas fa-times me-1"></i>Cancel Order
+          </button>
+        </form>
+
+      {% elif order.status == 'Paid' %}
+        <form method="POST" action="{% url 'customer_cancel_order' order.id %}" class="cancel-form-inline" onsubmit="return confirm('Submit cancellation request? Admin approval is required for paid orders.')">
+          {% csrf_token %}
+          <input type="text" name="reason" placeholder="Reason (optional)" class="form-control form-control-sm d-inline-block" style="width:200px;">
+          <button type="submit" class="btn btn-sm btn-outline-warning">
+            <i class="fas fa-ban me-1"></i>Request Cancellation
+          </button>
+        </form>
+        <small class="text-muted align-self-center">Requires admin approval</small>
+
+      {% elif order.status == 'In Production' %}
+        <span class="text-muted small align-self-center">
+          <i class="fas fa-lock me-1"></i>Cancellation blocked — order is in production
+        </span>
+
+      {% elif order.status == 'Sent' or order.status == 'Delivered' %}
+        <form method="POST" action="{% url 'customer_return_order' order.id %}" class="cancel-form-inline" onsubmit="return confirm('Process return for this order? Stock will be restored.')">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-undo me-1"></i>Return Order
+          </button>
+        </form>
+
+      {% elif order.status == 'Cancelled' %}
+        <span class="text-muted small"><i class="fas fa-check-circle text-danger me-1"></i>This order has been cancelled.</span>
+
+      {% elif order.status == 'Returned' %}
+        <span class="text-muted small"><i class="fas fa-check-circle text-secondary me-1"></i>This order has been returned.</span>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% empty %}
+<div class="text-center py-5">
+  <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+  <p class="text-muted">No orders yet.</p>
+  <a href="{% url 'customer_dashboard' %}" class="btn btn-primary">Start Shopping</a>
+</div>
+{% endfor %}
+{% endblock %}

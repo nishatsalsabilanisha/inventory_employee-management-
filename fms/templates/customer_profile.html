@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<h2>Customer Profile</h2>
+
+{% if customer.photo %}
+    <img src="{{ customer.photo.url }}"
+         width="180"
+         height="180"
+         style="border-radius:50%; object-fit:cover;">
+{% else %}
+    <img src="{% static 'images/default-user.png' %}"
+         width="180"
+         height="180"
+         style="border-radius:50%; object-fit:cover;">
+{% endif %}
+
+<h3>{{ customer.name }}</h3>
+
+<p>Email: {{ customer.email }}</p>
+
+<p>Phone: {{ customer.phone }}</p>
+
+<a href="{% url 'edit_customer_profile' %}" class="btn btn-primary">
+    Edit Profile
+</a>
+
+{% endblock %}

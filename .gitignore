@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+
+db.sqlite3
+sqlite_dump.json
+terminalcodes.txt
+
+media/buyer_photos/
+media/employee_photos/
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+staticfiles/

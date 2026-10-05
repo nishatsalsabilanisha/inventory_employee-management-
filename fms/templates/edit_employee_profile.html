@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<div class="card shadow p-4">
+
+<h2>Edit Employee Profile</h2>
+
+<form method="POST" enctype="multipart/form-data">
+
+{% csrf_token %}
+
+{% if profile.photo %}
+<img src="{{ profile.photo.url }}"
+     width="150"
+     height="150"
+     style="border-radius:50%;object-fit:cover;">
+{% endif %}
+
+<br>
+
+<br>
+
+<label>Phone</label>
+
+<input
+class="form-control"
+type="text"
+name="phone"
+value="{{ profile.phone }}">
+
+<br>
+
+<label>Designation</label>
+
+<input
+class="form-control"
+type="text"
+name="designation"
+value="{{ profile.designation }}">
+
+<br>
+
+<label>Profile Photo</label>
+
+<input
+class="form-control"
+type="file"
+name="photo">
+
+<br>
+
+<button class="btn btn-success">
+
+Save Changes
+
+</button>
+
+</form>
+
+</div>
+
+</div>
+
+{% endblock %}

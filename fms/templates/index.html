@@ -1,0 +1,481 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Touch and Solve - Home{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== HERO ===== */
+  .hero-section {
+    position: relative;
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(15,23,42,0.85), rgba(14,165,233,0.75)),
+                url('https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80') center/cover no-repeat;
+    color: #fff;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero-section::after {
+    content: '';
+    position: absolute; bottom: -2px; left: 0; right: 0;
+    height: 80px;
+    background: var(--bg-light);
+    clip-path: ellipse(55% 100% at 50% 100%);
+  }
+  .hero-content { position: relative; z-index: 2; max-width: 800px; }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 0.4rem 1.2rem;
+    border-radius: 50px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .hero-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1.15;
+    margin-bottom: 1.2rem;
+  }
+  .hero-subtitle {
+    font-size: 1.15rem;
+    font-weight: 300;
+    color: rgba(255,255,255,0.85);
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    line-height: 1.7;
+  }
+  .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .btn-hero {
+    padding: 0.8rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all 0.3s;
+    border: none;
+  }
+  .btn-hero-primary { background: #fff; color: var(--primary); }
+  .btn-hero-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); color: var(--primary-dark); }
+  .btn-hero-outline {
+    background: transparent; color: #fff;
+    border: 2px solid rgba(255,255,255,0.5);
+  }
+  .btn-hero-outline:hover { background: rgba(255,255,255,0.1); border-color: #fff; transform: translateY(-3px); }
+  .floating-shape {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    animation: float 6s ease-in-out infinite;
+  }
+  .floating-shape:nth-child(1) { width: 200px; height: 200px; top: 10%; left: 5%; animation-delay: 0s; }
+  .floating-shape:nth-child(2) { width: 120px; height: 120px; top: 60%; right: 8%; animation-delay: 2s; }
+  .floating-shape:nth-child(3) { width: 80px; height: 80px; bottom: 20%; left: 15%; animation-delay: 4s; }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+  }
+
+  /* ===== ABOUT ===== */
+  .about-section { background: var(--bg-light); }
+  .about-images { position: relative; }
+  .about-img-main {
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+  }
+  .about-img-secondary {
+    position: absolute;
+    bottom: -30px;
+    right: -20px;
+    width: 200px;
+    height: 200px;
+    border-radius: 16px;
+    border: 6px solid var(--bg-light);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+    object-fit: cover;
+  }
+  .about-badge {
+    position: absolute;
+    bottom: 20px;
+    left: -10px;
+    background: var(--gradient);
+    color: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(14,165,233,0.35);
+  }
+  .about-badge .count { font-size: 2.2rem; font-weight: 900; line-height: 1; }
+  .about-badge .label { font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+
+  .about-feature-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.2rem;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .about-feature-box:hover { transform: translateY(-4px); }
+  .about-feature-icon {
+    width: 56px; height: 56px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+  }
+
+  /* ===== SERVICES ===== */
+  .services-section {
+    background: linear-gradient(135deg, rgba(14,165,233,0.03), rgba(56,189,248,0.03));
+    position: relative;
+  }
+  .services-section::before {
+    content: '';
+    position: absolute; top: 0; right: 0;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(14,165,233,0.06) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .service-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    transition: all 0.4s ease;
+    border: 1px solid rgba(0,0,0,0.04);
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+  }
+  .service-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: var(--gradient);
+    transform: scaleX(0);
+    transition: transform 0.4s;
+  }
+  .service-card:hover::before { transform: scaleX(1); }
+  .service-card:hover { transform: translateY(-8px); box-shadow: 0 16px 50px rgba(0,0,0,0.12); }
+  .service-icon {
+    width: 80px; height: 80px; margin: 0 auto 1.2rem;
+    border-radius: 20px; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 2rem;
+    transition: transform 0.3s;
+  }
+  .service-card:hover .service-icon { transform: scale(1.1); }
+  .service-card h5 { font-weight: 700; margin-bottom: 0.6rem; color: var(--dark); }
+  .service-card p { font-size: 0.88rem; color: #666; margin: 0; line-height: 1.6; }
+
+  /* ===== COUNTERS ===== */
+  .counter-section {
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+  }
+  .counter-section::before {
+    content: '';
+    position: absolute; top: -50%; right: -10%;
+    width: 500px; height: 500px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+  .counter-section::after {
+    content: '';
+    position: absolute; bottom: -30%; left: -5%;
+    width: 300px; height: 300px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+  .counter-item { text-align: center; padding: 1rem; position: relative; z-index: 1; }
+  .counter-item .count-text { font-size: 3rem; font-weight: 900; color: #fff; line-height: 1; }
+  .counter-item .counter-label { color: rgba(255,255,255,0.8); font-size: 0.9rem; font-weight: 500; margin-top: 0.3rem; }
+  .counter-item i { font-size: 2.5rem; color: rgba(255,255,255,0.3); margin-bottom: 0.5rem; }
+
+  /* ===== REGISTRATION ===== */
+  .register-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+    transition: all 0.4s;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+  }
+  .register-card::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--gradient);
+    transition: height 0.3s;
+  }
+  .register-card:hover { transform: translateY(-8px); box-shadow: 0 16px 50px rgba(0,0,0,0.12); }
+  .register-card:hover::after { height: 6px; }
+  .register-icon {
+    width: 90px; height: 90px; margin: 0 auto 1.5rem;
+    border-radius: 50%; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 2.2rem;
+    transition: transform 0.3s;
+  }
+  .register-card:hover .register-icon { transform: scale(1.1) rotate(5deg); }
+  .register-card h5 { font-weight: 700; font-size: 1.2rem; color: var(--dark); margin-bottom: 0.5rem; }
+  .register-card p { font-size: 0.88rem; color: #666; line-height: 1.6; margin-bottom: 1.5rem; }
+
+  /* ===== CTA ===== */
+  .cta-section {
+    background: linear-gradient(135deg, var(--dark), var(--darker));
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute; top: -100px; right: -100px;
+    width: 400px; height: 400px;
+    background: rgba(14,165,233,0.15);
+    border-radius: 50%;
+  }
+  .cta-section::after {
+    content: '';
+    position: absolute; bottom: -80px; left: -80px;
+    width: 300px; height: 300px;
+    background: rgba(56,189,248,0.1);
+    border-radius: 50%;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .hero-title { font-size: 2.2rem; }
+    .hero-section { min-height: 70vh; }
+    .section-title { font-size: 1.8rem; }
+    .about-img-secondary { display: none; }
+    .counter-item .count-text { font-size: 2rem; }
+    .floating-shape { display: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ===== HERO ===== -->
+<section class="hero-section">
+  <div class="floating-shape"></div>
+  <div class="floating-shape"></div>
+  <div class="floating-shape"></div>
+  <div class="hero-content" data-aos="fade-up" data-aos-duration="1000">
+    <div class="hero-badge">Welcome to Touch and Solve</div>
+    <h1 class="hero-title">Your Complete<br><span class="text-gradient" style="-webkit-text-fill-color:#fff;">Fashion Management</span> Platform</h1>
+    <p class="hero-subtitle">Streamline your fashion business with powerful tools for employee management, inventory control, and customer relations — all in one place.</p>
+    <div class="hero-buttons">
+      <a href="{% url 'about' %}" class="btn-hero btn-hero-primary">
+        <i class="fas fa-play me-2"></i>Get Started
+      </a>
+      <a href="#register" class="btn-hero btn-hero-primary">
+        <i class="fas fa-user-plus me-2"></i>Register Now
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ABOUT ===== -->
+<section class="section-padding about-section">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6" data-aos="fade-up" data-aos-duration="1000">
+        <div class="about-images">
+          <img src="https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600&q=80" alt="Fashion Management" class="about-img-main">
+          <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&q=80" alt="Fashion Store" class="about-img-secondary">
+          <div class="about-badge">
+            <div class="count"><span class="count-text" data-stop="5" data-speed="2500">00</span>+</div>
+            <div class="label">Years Experience</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="200">
+        <p class="section-subtitle">About Us</p>
+        <h2 class="section-title">We Are <span>Creative Innovators</span> in Fashion Management</h2>
+        <p style="color:#555; line-height:1.8; margin-bottom:2rem;">
+          Touch and Solve is a comprehensive fashion management platform designed for businesses in Bangladesh.
+          We help you manage employees, customers, and inventory seamlessly — providing real-time
+          tracking, analytics, and reporting to help you make data-driven decisions.
+        </p>
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <a href="#" class="about-feature-box">
+              <div class="about-feature-icon" style="background:rgba(14,165,233,0.1); color:#0ea5e9;">
+                <i class="fas fa-headset"></i>
+              </div>
+              <div>
+                <h6 class="fw-bold mb-1" style="color:var(--dark);">IT Consultant</h6>
+                <small class="text-muted">Smarter Solutions</small>
+              </div>
+            </a>
+          </div>
+          <div class="col-sm-6">
+            <a href="#" class="about-feature-box">
+              <div class="about-feature-icon" style="background:rgba(56,189,248,0.1); color:#38bdf8;">
+                <i class="fas fa-user-gear"></i>
+              </div>
+              <div>
+                <h6 class="fw-bold mb-1" style="color:var(--dark);">Expert Team</h6>
+                <small class="text-muted">Faster Solutions</small>
+              </div>
+            </a>
+          </div>
+        </div>
+        <a href="{% url 'about' %}" class="btn btn-primary px-4 py-2">
+          Learn More <i class="fas fa-arrow-right ms-2"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SERVICES ===== -->
+<section class="section-padding services-section">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up">
+      <p class="section-subtitle">What We Offer</p>
+      <h2 class="section-title">Powerful <span>Features</span> for Your Business</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="0">
+        <div class="service-card">
+          <div class="service-icon" style="background:rgba(14,165,233,0.1); color:#0ea5e9;">
+            <i class="fas fa-users"></i>
+          </div>
+          <h5>Employee Management</h5>
+          <p>Manage employee profiles, track attendance with clock-in/out, handle payroll, and monitor daily work production efficiently.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+        <div class="service-card">
+          <div class="service-icon" style="background:rgba(34,211,238,0.1); color:#22d3ee;">
+            <i class="fas fa-box"></i>
+          </div>
+          <h5>Inventory Control</h5>
+          <p>Manage product inventory, variant stock levels, and automatic stock updates during orders and production.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="0">
+        <div class="service-card">
+          <div class="service-icon" style="background:rgba(14,165,233,0.1); color:#0ea5e9;">
+            <i class="fas fa-shopping-bag"></i>
+          </div>
+          <h5>Order Management</h5>
+          <p>Complete order lifecycle from placement to delivery with status tracking, cancellation handling, and payment processing.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+        <div class="service-card">
+          <div class="service-icon" style="background:rgba(56,189,248,0.1); color:#ffc107;">
+            <i class="fas fa-money-bill-wave"></i>
+          </div>
+          <h5>Payment Processing</h5>
+          <p>Secure online payments via SSLCommerz, manual cash payments, transaction history, and automated salary disbursement.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+        <div class="service-card">
+          <div class="service-icon" style="background:rgba(14,165,233,0.1); color:#17a2b8;">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h5>Analytics & Reports</h5>
+          <p>Dashboard analytics, PDF reports, attendance summaries, and production insights for data-driven business decisions.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== COUNTERS ===== -->
+<section class="section-padding counter-section">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-3 col-6" data-aos="zoom-in" data-aos-delay="0">
+        <div class="counter-item">
+          <i class="fas fa-users d-block"></i>
+          <div class="count-text" data-stop="50" data-speed="2500">00</div>
+          <div class="counter-label">Employees</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6" data-aos="zoom-in" data-aos-delay="100">
+        <div class="counter-item">
+          <i class="fas fa-user-friends d-block"></i>
+          <div class="count-text" data-stop="100" data-speed="2500">00</div>
+          <div class="counter-label">Customers</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6" data-aos="zoom-in" data-aos-delay="200">
+        <div class="counter-item">
+          <i class="fas fa-box d-block"></i>
+          <div class="count-text" data-stop="500" data-speed="2500">00</div>
+          <div class="counter-label">Products</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== REGISTRATION ===== -->
+<section id="register" class="section-padding" style="background:var(--bg-light);">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up">
+      <p class="section-subtitle">Join Us Today</p>
+      <h2 class="section-title">Create Your <span>Account</span></h2>
+      <p class="text-muted" style="max-width:600px; margin:0 auto;">Choose your role and register to get started with Touch and Solve's powerful management tools. Employee accounts are created by the Admin.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-6 col-md-6 mx-auto" data-aos="fade-up" data-aos-delay="0">
+        <div class="register-card">
+          <div class="register-icon" style="background:rgba(34,211,238,0.1); color:#22d3ee;">
+            <i class="fas fa-user"></i>
+          </div>
+          <h5>Customer</h5>
+          <p>Register as a customer to browse products, place orders, make payments, and track deliveries.</p>
+          <a href="{% url 'customer_register_page' %}" class="btn btn-primary px-4 py-2 rounded-pill">
+            <i class="fas fa-user-plus me-2"></i>Register as Customer
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="section-padding cta-section text-white text-center" style="position:relative;">
+  <div class="container" style="position:relative; z-index:1;">
+    <div data-aos="fade-up">
+      <h2 class="fw-bold mb-3" style="font-size:2.2rem;">Ready to Transform Your Fashion Business?</h2>
+      <p class="mb-4" style="color:rgba(255,255,255,0.75); max-width:600px; margin:0 auto; font-size:1.05rem;">
+        Join Touch and Solve today and experience seamless management of your employees, customers, and inventory.
+      </p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="{% url 'login_page' %}" class="btn btn-light px-4 py-2 rounded-pill fw-semibold">
+          <i class="fas fa-sign-in-alt me-2"></i>Employee Login
+        </a>
+        <a href="{% url 'customer_login_page' %}" class="btn btn-outline-light px-4 py-2 rounded-pill fw-semibold">
+          <i class="fas fa-user me-2"></i>Customer Login
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

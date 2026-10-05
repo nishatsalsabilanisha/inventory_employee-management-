@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ product.name }} | Touch and Solve{% endblock %}
+{% block content %}
+<style>
+  .detail-wrapper { max-width: 1200px; margin: 30px auto; }
+  .detail-image-box {
+    background: #fff; border-radius: var(--radius);
+    box-shadow: var(--card-shadow); overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 460px; border: 1px solid #eef2f7;
+  }
+  .detail-image-box img { width: 100%; height: 460px; object-fit: cover; }
+  .thumb-box { border: 2px solid #e2e8f0; border-radius: 10px; overflow: hidden; cursor: pointer; opacity: .7; transition: all .2s; }
+  .thumb-box:hover { opacity: 1; }
+  .thumb-box.active { border-color: var(--primary); opacity: 1; }
+  .thumb-box img { width: 100%; height: 84px; object-fit: cover; display: block; }
+  .option-label { font-size: 0.85rem; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 1px; }
+  .opt-btn {
+    border: 2px solid #e2e8f0; background: #fff; border-radius: 999px;
+    padding: 6px 16px; font-size: 0.88rem; font-weight: 600; color: #334155;
+    transition: all .2s ease;
+  }
+  .opt-btn:hover { border-color: var(--secondary); }
+  .opt-btn.active { border-color: var(--primary); background: var(--primary); color: #fff; }
+  .opt-btn.invalid-opt { border-color: #dc3545; background: #fecaca; color: #7f1d1d; }
+  .option-group-invalid .option-label { color: #dc3545; }
+  .btn-buy-now {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    border: none; box-shadow: 0 4px 12px rgba(22,163,74,.35);
+  }
+  .btn-buy-now:hover:not(:disabled) {
+    background: linear-gradient(135deg, #15803d, #16a34a);
+    transform: translateY(-2px); box-shadow: 0 6px 18px rgba(22,163,74,.4);
+  }
+  .btn-buy-now:disabled { background: #a7f3d0; border: none; }
+  .color-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 6px; border: 1px solid rgba(0,0,0,.15); vertical-align: middle; }
+  .price-big { font-size: 2rem; font-weight: 800; color: var(--primary); }
+  .price-old { font-size: 1.15rem; font-weight: 600; color: #94a3b8; text-decoration: line-through; }
+  .qty-stepper { display: inline-flex; align-items: center; gap: 0; border: 1px solid #e2e8f0; border-radius: 999px; overflow: hidden; }
+  .qty-stepper button { border: none; background: #f1f5f9; width: 38px; height: 40px; font-weight: 700; color: #0f172a; }
+  .qty-stepper button:hover { background: var(--secondary); color: #fff; }
+  .qty-stepper input { border: none; width: 52px; text-align: center; font-weight: 700; }
+  .chip { display: inline-block; background: #f1f5f9; border-radius: 6px; padding: 2px 10px; font-size: 0.78rem; font-weight: 600; color: #475569; }
+  .related-card { border: 1px solid #eef2f7; border-radius: 14px; overflow: hidden; background: #fff; box-shadow: 0 2px 10px rgba(15,23,42,.06); transition: all .25s; height: 100%; }
+  .related-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(15,23,42,.12); }
+  .related-card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; }
+</style>
+
+<div class="container">
+  <div class="detail-wrapper">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'product_list' %}" class="text-decoration-none" style="color:#0ea5e9;">Shop</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'product_list' %}?category={{ product.category }}" class="text-decoration-none" style="color:#0ea5e9;">{{ product.category }}</a></li>
+        <li class="breadcrumb-item active text-muted">{{ product.name }}</li>
+      </ol>
+    </nav>
+
+    <div class="row g-4">
+      <!-- GALLERY -->
+      <div class="col-lg-5">
+        <div class="detail-image-box" id="main-image-box">
+          {% if gallery %}
+          <img src="{{ gallery.0.image.url }}" alt="{{ product.name }}" id="main-image">
+          {% elif product.image %}
+          <img src="{{ product.image.url }}" alt="{{ product.name }}" id="main-image">
+          {% else %}
+          <div class="bg-light d-flex align-items-center justify-content-center w-100" style="height:460px;">
+            <i class="fas fa-tshirt fa-5x text-muted"></i>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if gallery|length > 1 %}
+        <div class="d-flex gap-2 mt-3 flex-wrap" id="thumb-row">
+          {% for img in gallery %}
+          <div class="thumb-box {% if forloop.first %}active{% endif %}" data-src="{{ img.image.url }}">
+            <img src="{{ img.image.url }}" alt="">
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- DETAILS -->
+      <div class="col-lg-7">
+        <div class="mb-2">
+          <span class="badge" style="background:#e0f2fe;color:#0369a1;">{{ product.category }} / {{ product.subcategory }}</span>
+          {% if product.brand %}<span class="badge bg-dark">{{ product.brand }}</span>{% endif %}
+          {% if product.sku %}<span class="badge bg-secondary">{{ product.sku }}</span>{% endif %}
+        </div>
+        <h2 class="fw-bold mb-1">{{ product.name }}</h2>
+        <p class="text-muted">{{ product.description }}</p>
+
+        <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+          <div class="d-flex align-items-baseline gap-2">
+            <span class="price-big" id="variant-price">{{ base_price }}</span>
+            {% if discount_percent %}
+              <span class="price-old" id="original-price">{{ base_original_price }}</span>
+              <span class="badge bg-danger" id="discount-badge">-{{ discount_percent }}%</span>
+            {% endif %}
+          </div>
+          <span id="variant-stock">
+            <span class="badge bg-{% if base_stock > 10 %}success{% elif base_stock > 0 %}warning{% else %}danger{% endif %}">
+              Available Stock: {{ base_stock }}
+            </span>
+          </span>
+        </div>
+
+        {% if has_variants %}
+        <!-- COLOR -->
+        <div class="mb-3">
+          <div class="option-label mb-2"><i class="fas fa-palette me-1"></i>Color</div>
+          <div class="d-flex flex-wrap gap-2" id="color-options">
+            {% for color in colors %}
+            <button type="button" class="opt-btn" data-color="{{ color }}">
+              <span class="color-dot" style="background:{{ color|lower }};"></span>{{ color }}
+            </button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- SIZE -->
+        <div class="mb-3">
+          <div class="option-label mb-2"><i class="fas fa-ruler me-1"></i>Size</div>
+          <div class="d-flex flex-wrap gap-2" id="size-options">
+            {% for size in sizes %}
+            <button type="button" class="opt-btn" data-size="{{ size }}">{{ size }}</button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- TEXTILE -->
+        <div class="mb-4">
+          <div class="option-label mb-2"><i class="fas fa-wind me-1"></i>Textile Type</div>
+          <div class="d-flex flex-wrap gap-2" id="textile-options">
+            {% for textile in textiles %}
+            <button type="button" class="opt-btn" data-textile="{{ textile }}">{{ textile }}</button>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'add_to_cart' product.sl %}" id="add-cart-form">
+          {% csrf_token %}
+          <input type="hidden" name="color" id="input-color" value="">
+          <input type="hidden" name="size" id="input-size" value="">
+          <input type="hidden" name="textile" id="input-textile" value="">
+
+          <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+            <div class="qty-stepper">
+              <button type="button" id="qty-minus"><i class="fas fa-minus"></i></button>
+              <input type="number" name="quantity" id="qty-input" value="1" min="1" max="7">
+              <button type="button" id="qty-plus"><i class="fas fa-plus"></i></button>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg px-4" id="add-to-cart-btn"
+              {% if base_stock <= 0 and not has_variants %}disabled{% endif %}>
+              <i class="fas fa-cart-plus me-1"></i>Add to Cart
+            </button>
+            <button type="submit" class="btn btn-buy-now btn-lg px-4" id="buy-now-btn"
+              formaction="{% url 'buy_now' product.sl %}"
+              {% if base_stock <= 0 and not has_variants %}disabled{% endif %}>
+              <i class="fas fa-bolt me-1"></i>Buy Now
+            </button>
+          </div>
+
+          {% if user_role != "customer" %}
+          <p class="small text-muted mb-0">
+            <i class="fas fa-info-circle me-1"></i>
+            Please <a href="{% url 'customer_login_page' %}" class="fw-semibold" style="color:#0ea5e9;">login as a customer</a> to add items to your cart.
+          </p>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+
+    {% if related %}
+    <!-- RELATED PRODUCTS -->
+    <div class="mt-5">
+      <h4 class="fw-bold mb-3"><i class="fas fa-link me-2" style="color:#0ea5e9;"></i>You May Also Like</h4>
+      <div class="row g-3">
+        {% for r in related %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <a href="{% url 'product_detail' r.sl %}" class="text-decoration-none">
+            <div class="related-card">
+              {% with img=r.primary_image %}
+              {% if img %}
+                <img src="{{ img.image.url }}" alt="{{ r.name }}" loading="lazy">
+              {% elif r.image %}
+                <img src="{{ r.image.url }}" alt="{{ r.name }}" loading="lazy">
+              {% else %}
+                <div class="d-flex align-items-center justify-content-center" style="aspect-ratio:3/4;">
+                  <i class="fas fa-tshirt fa-2x text-muted"></i>
+                </div>
+              {% endif %}
+              {% endwith %}
+              <div class="p-2">
+                <div class="small fw-semibold" style="color:#0f172a;">{{ r.name|truncatechars:40 }}</div>
+                <div class="fw-bold" style="color:#0ea5e9;">৳{{ r.effective_price|floatformat:0 }}
+                  {% if r.discount_percent %}<s class="text-muted small fw-normal">৳{{ r.price|floatformat:0 }}</s>{% endif %}
+                </div>
+              </div>
+            </div>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  // Gallery thumbnails
+  var thumbRow = document.getElementById('thumb-row');
+  var mainImage = document.getElementById('main-image');
+  if (thumbRow && mainImage) {
+    thumbRow.querySelectorAll('.thumb-box').forEach(function(thumb) {
+      thumb.addEventListener('click', function() {
+        thumbRow.querySelectorAll('.thumb-box').forEach(function(t) { t.classList.remove('active'); });
+        thumb.classList.add('active');
+        mainImage.src = thumb.getAttribute('data-src');
+      });
+    });
+  }
+
+  var VARIANTS = {{ variants_json|safe }};
+  var hasVariants = {{ has_variants|yesno:"true,false" }};
+  var BASE_PRICE = {{ product.effective_price }};
+  var BASE_STOCK = {{ base_stock }};
+  var selected = { color: "", size: "", textile: "" };
+
+  var priceEl = document.getElementById('variant-price');
+  var stockEl = document.getElementById('variant-stock');
+  var addBtn = document.getElementById('add-to-cart-btn');
+  var buyBtn = document.getElementById('buy-now-btn');
+  var qtyInput = document.getElementById('qty-input');
+
+  function fmt(n) {
+    return '\u09F3' + Number(n).toLocaleString('en-US');
+  }
+
+  function stockBadge(stock) {
+    return '<span class="badge bg-' + (stock > 10 ? 'success' : (stock > 0 ? 'warning' : 'danger')) + '">Available Stock: ' + stock + '</span>';
+  }
+
+  function findVariant() {
+    var match = null;
+    VARIANTS.forEach(function(v) {
+      if (v.color === selected.color && v.size === selected.size && v.textile === selected.textile) {
+        match = v;
+      }
+    });
+    return match;
+  }
+
+  function update() {
+    var v = findVariant();
+    var price, stock;
+
+    if (v) {
+      price = v.price;
+      stock = v.stock;
+      stockEl.innerHTML = stockBadge(stock) + (stock > 0 && stock < 5 ? ' <span class="badge bg-danger">Only ' + stock + ' left</span>' : '');
+    } else {
+      price = BASE_PRICE;
+      stock = BASE_STOCK;
+      stockEl.innerHTML = stockBadge(stock);
+    }
+
+    priceEl.textContent = fmt(price);
+    addBtn.disabled = stock <= 0;
+    if (buyBtn) buyBtn.disabled = stock <= 0;
+    qtyInput.max = Math.min(7, Math.max(1, stock));
+    if (parseInt(qtyInput.value, 10) > qtyInput.max) { qtyInput.value = qtyInput.max; }
+  }
+
+  function clearInvalid(groupId) {
+    var box = document.getElementById(groupId + '-options');
+    if (!box) return;
+    box.querySelectorAll('button').forEach(function(b) { b.classList.remove('invalid-opt'); });
+    var group = box.closest('.mb-3');
+    if (group) group.classList.remove('option-group-invalid');
+  }
+
+  function bindGroup(containerId, key, attr) {
+    var box = document.getElementById(containerId);
+    if (!box) return;
+    box.querySelectorAll('button').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        box.querySelectorAll('button').forEach(function(b) { b.classList.remove('active', 'invalid-opt'); });
+        btn.classList.add('active');
+        selected[key] = btn.getAttribute(attr);
+        document.getElementById('input-' + key).value = selected[key];
+        var group = box.closest('.mb-3');
+        if (group) group.classList.remove('option-group-invalid');
+        update();
+      });
+    });
+  }
+
+  bindGroup('color-options', 'color', 'data-color');
+  bindGroup('size-options', 'size', 'data-size');
+  bindGroup('textile-options', 'textile', 'data-textile');
+
+  document.getElementById('qty-minus').addEventListener('click', function() {
+    var v = parseInt(qtyInput.value, 10) || 1;
+    if (v > 1) { qtyInput.value = v - 1; }
+  });
+  document.getElementById('qty-plus').addEventListener('click', function() {
+    var v = parseInt(qtyInput.value, 10) || 1;
+    var max = parseInt(qtyInput.max, 10) || 7;
+    if (v < max) { qtyInput.value = v + 1; }
+  });
+
+  if (buyBtn) {
+    buyBtn.addEventListener('click', function(e) {
+      if (hasVariants && !(selected.color && selected.size && selected.textile)) {
+        e.preventDefault();
+        var missing = [];
+        ['color', 'size', 'textile'].forEach(function(k) {
+          if (!selected[k]) {
+            missing.push(k);
+            var box = document.getElementById(k + '-options');
+            if (box) {
+              box.querySelectorAll('button').forEach(function(b) { b.classList.add('invalid-opt'); });
+              var group = box.closest('.mb-3');
+              if (group) group.classList.add('option-group-invalid');
+            }
+          }
+        });
+        showPopup('Please select color, size and textile before buying.', 'error');
+      }
+    });
+  }
+
+  update();
+})();
+</script>
+{% endblock %}

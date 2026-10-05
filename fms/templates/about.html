@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="row align-items-center mb-5">
+  <div class="col-lg-6">
+    <h1 class="fw-bold mb-3" style="color:#0ea5e9;">About Touch and Solve</h1>
+    <p class="lead text-muted">Your trusted partner in fashion and apparel management since 2020.</p>
+    <p class="text-muted">Touch and Solve is a comprehensive management platform designed to streamline operations for fashion businesses. We provide tools for employee management, customer relations, and inventory tracking.</p>
+    <p class="text-muted">Our mission is to empower fashion businesses with technology that simplifies complex workflows and drives growth.</p>
+  </div>
+  <div class="col-lg-6">
+    <img src="{% static 'images/about.jpg' %}" class="img-fluid rounded-3 shadow" alt="About Us">
+  </div>
+</div>
+
+<div class="row g-4 mb-5">
+  <div class="col-md-4">
+    <div class="card card-custom p-4 text-center h-100">
+      <i class="fas fa-eye fa-2x mb-3" style="color:#0ea5e9;"></i>
+      <h5 class="fw-bold">Our Vision</h5>
+      <p class="text-muted small">To be the leading fashion management platform, empowering businesses worldwide.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card card-custom p-4 text-center h-100">
+      <i class="fas fa-bullseye fa-2x mb-3" style="color:#38bdf8;"></i>
+      <h5 class="fw-bold">Our Mission</h5>
+      <p class="text-muted small">Simplify fashion business operations through innovative technology solutions.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card card-custom p-4 text-center h-100">
+      <i class="fas fa-star fa-2x mb-3" style="color:#22d3ee;"></i>
+      <h5 class="fw-bold">Our Values</h5>
+      <p class="text-muted small">Integrity, innovation, and customer success drive everything we do.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

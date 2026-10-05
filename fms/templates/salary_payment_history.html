@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    <h2 class="fw-bold mb-4"><i class="fas fa-file-invoice-dollar me-2" style="color:#0ea5e9;"></i>Salary Payment History</h2>
+
+    <form method="get" class="row g-2 mb-4 align-items-end">
+      <div class="col-auto">
+        <label class="form-label small fw-semibold mb-1">Search Employee</label>
+        <input type="text" name="q" value="{{ q }}" placeholder="Name or Employee ID" class="form-control" style="max-width:240px;">
+      </div>
+      <div class="col-auto">
+        <label class="form-label small fw-semibold mb-1">Month</label>
+        <input type="month" name="month" value="{{ month }}" class="form-control" style="max-width:200px;">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-search me-1"></i>Filter</button>
+        <a href="{% url 'salary_payment_history' %}" class="btn btn-outline-secondary">Reset</a>
+      </div>
+      <div class="col-auto ms-auto">
+        <form method="get" action="{% url 'download_salary_report' 'YYYY-MM' %}" class="d-flex gap-2" onsubmit="this.action = this.action.replace('YYYY-MM', this.querySelector('[name=month]').value);">
+          <input type="month" name="month" class="form-control" style="max-width:180px;" value="{{ month }}" required>
+          <button type="submit" class="btn btn-outline-success"><i class="fas fa-file-download me-1"></i>Download Report</button>
+        </form>
+      </div>
+    </form>
+
+    {% if payments %}
+    <div class="card card-custom">
+      <div class="card-header bg-transparent fw-bold">Payments</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Employee Name</th>
+                <th>Employee ID</th>
+                <th>Salary Month</th>
+                <th class="text-end">Basic Salary</th>
+                <th class="text-end">Leave Deduction</th>
+                <th class="text-end">Bonus</th>
+                <th class="text-end">Final Salary</th>
+                <th>Payment Date</th>
+                <th>Status</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in payments %}
+              <tr>
+                <td class="fw-semibold">{{ p.employee_profile.employee.name }}</td>
+                <td class="small text-muted">{{ p.employee_profile.public_id }}</td>
+                <td class="small">{{ p.salary_month }}</td>
+                <td class="text-end">৳{{ p.basic_salary|floatformat:2 }}</td>
+                <td class="text-end text-danger">৳{{ p.leave_deduction|floatformat:2 }}</td>
+                <td class="text-end">৳{{ p.bonus|floatformat:2 }}</td>
+                <td class="text-end fw-bold" style="color:#0ea5e9;">৳{{ p.final_salary|floatformat:2 }}</td>
+                <td class="small">{{ p.payment_date|date:"M d, Y" }}</td>
+                <td><span class="badge bg-success">Paid</span></td>
+                <td class="text-end">
+                  <a href="{% url 'salary_slip' p.id %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-print me-1"></i>Slip</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="table-light fw-bold">
+              <tr>
+                <td colspan="2">Total</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="text-end">৳{{ totals.bonus|floatformat:2 }}</td>
+                <td class="text-end" style="color:#0ea5e9;">৳{{ totals.total|floatformat:2 }}</td>
+                <td colspan="3"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p class="text-muted text-center py-4">No salary payments found.</p>
+    {% endif %}
+{% endblock %}

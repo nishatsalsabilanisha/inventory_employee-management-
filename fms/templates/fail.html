@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card mt-4">
+  <div class="card-body">
+    <h2 class="card-title">Payment Failed</h2>
+    <p>Unfortunately, your payment could not be completed.</p>
+    {% if payment %}
+      <p>Transaction ID: {{ payment.order_id }}</p>
+      <p>Amount: {{ payment.amount }} {{ payment.currency }}</p>
+    {% endif %}
+    <a href="{% url 'customer_dashboard' %}" class="btn btn-secondary">Back to dashboard</a>
+  </div>
+</div>
+{% endblock %}

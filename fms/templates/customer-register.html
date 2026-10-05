@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="row justify-content-center mt-3">
+  <div class="col-md-6 col-lg-5">
+    <div class="card card-custom p-4">
+      <div class="text-center mb-4">
+        <i class="fas fa-user fa-3x mb-2" style="color:#0ea5e9;"></i>
+        <h4 class="fw-bold" style="color:#0f172a;">Customer Registration</h4>
+        <p class="small" style="color:#64748b;">Create your customer account to shop</p>
+      </div>
+      <form method="post" action="{% url 'customer_register' %}" autocomplete="new-password" id="customer-register-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger py-2 px-3 small">
+          {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color:#334155;">Full Name</label>
+          {{ form.name }}
+          {% if form.name.errors %}<small class="text-danger">{{ form.name.errors.0 }}</small>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color:#334155;">Email Address</label>
+          {{ form.email }}
+          {% if form.email.errors %}<small class="text-danger">{{ form.email.errors.0 }}</small>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color:#334155;">Phone</label>
+          {{ form.phone }}
+          <small style="color:#64748b;">Must be exactly 11 digits</small>
+          {% if form.phone.errors %}<small class="text-danger">{{ form.phone.errors.0 }}</small>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color:#334155;">Address</label>
+          {{ form.address }}
+          {% if form.address.errors %}<small class="text-danger">{{ form.address.errors.0 }}</small>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color:#334155;">Password</label>
+          {{ form.password }}
+          <small style="color:#64748b;">Min 8 chars: uppercase, lowercase, number &amp; special character</small>
+          {% if form.password.errors %}<small class="text-danger">{{ form.password.errors.0 }}</small>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" style="color:#334155;">Confirm Password</label>
+          {{ form.confirm_password }}
+          <small style="color:#64748b;">Must match the password above</small>
+          {% if form.confirm_password.errors %}<small class="text-danger">{{ form.confirm_password.errors.0 }}</small>{% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Register</button>
+      </form>
+      <p class="text-center small mt-3 mb-0" style="color:#64748b;">
+        Already have an account? <a href="{% url 'customer_login_page' %}" class="text-decoration-none fw-semibold" style="color:#0ea5e9;">Sign In</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

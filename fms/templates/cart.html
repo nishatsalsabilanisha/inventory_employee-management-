@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}My Cart | Touch and Solve{% endblock %}
+{% block content %}
+<style>
+  .cart-img { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; flex-shrink: 0; display: block; }
+  .cart-img-box {
+    width: 80px; height: 80px; border-radius: 10px; background: #f1f5f9;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .chip {
+    display: inline-block; background: #e0f2fe; color: #0369a1; border-radius: 6px;
+    padding: 2px 10px; font-size: 0.78rem; font-weight: 600; margin-right: 4px;
+  }
+  .qty-stepper {
+    display: inline-flex; align-items: center; border: 1px solid #e2e8f0; border-radius: 999px; overflow: hidden;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .qty-stepper button { border: none; background: #f1f5f9; width: 28px; height: 32px; font-weight: 700; color: #0f172a; line-height: 1; }
+  .qty-stepper button:hover { background: var(--secondary); color: #fff; }
+  .qty-stepper input { border: none; width: 34px; text-align: center; font-weight: 700; }
+
+  /* ===== CART ITEM STRUCTURE =====
+     The whole cart item is a container so the layout adapts to the
+     ACTUAL available width (not the viewport), which can be narrow
+     because of the customer sidebar.                    */
+  .cart-item {
+    container-type: inline-size;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .cart-item > * { box-sizing: border-box; min-width: 0; }
+
+  /* ROW 1: image + product info, always side by side */
+  .cart-item-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .cart-item-image { flex-shrink: 0; }
+  .cart-item-info { min-width: 0; flex: 1 1 auto; }
+  .cart-item-info .cart-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ROW 2 (bottom action area): qty + subtotal + actions.
+     flex-wrap lets sections wrap to a new line at narrow widths so
+     nothing ever overlaps.                                 */
+  .cart-item-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .cart-item-qty { flex-shrink: 0; white-space: nowrap; }
+  .cart-item-subtotal {
+    flex: 0 0 auto;
+    min-width: max-content;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .cart-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  .btn-checkout-item {
+    width: 117px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .btn-delete-item {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  /* When the cart item itself is wide enough, show a single compact
+     row. If the real width is insufficient, flex-wrap degrades back
+     to TWO rows (main / bottom) so nothing overlaps or overflows.  */
+  @container (min-width: 620px) {
+    .cart-item { display: flex; flex-wrap: wrap; align-items: center; }
+    .cart-item-main { flex: 1 1 0; min-width: 0; }
+    .cart-item-bottom { flex: 0 0 auto; width: auto; margin-top: 0; }
+    .cart-item-actions { margin-left: 12px; }
+  }
+</style>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"><i class="fas fa-shopping-cart me-2" style="color:#0ea5e9;"></i>My Cart ({{ cart_items|length }})</h4>
+    <a href="{% url 'customer_dashboard' %}" class="btn btn-outline-primary btn-sm"><i class="fas fa-arrow-left me-1"></i>Continue Shopping</a>
+  </div>
+
+  {% if cart_items %}
+  <div class="alert alert-info py-2 small d-flex justify-content-between align-items-center">
+    <span><i class="fas fa-info-circle me-1"></i>Each item is checked out individually.</span>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card card-custom">
+        <div class="card-body p-0">
+          {% for item in cart_items %}
+          <div class="cart-item p-3 {% if not forloop.last %}border-bottom{% endif %}">
+            <div class="cart-item-main">
+              <div class="cart-item-image">
+                {% if item.product.image %}
+                <img src="{{ item.product.image.url }}" class="cart-img" alt="{{ item.product.name }}">
+                {% else %}
+                <div class="cart-img-box"><i class="fas fa-tshirt text-muted fa-2x"></i></div>
+                {% endif %}
+              </div>
+
+              <div class="cart-item-info">
+                <a href="{% url 'product_detail' item.product.sl %}" class="fw-bold cart-name" style="color:#0f172a;">{{ item.product.name }}</a>
+                <div class="mt-1">
+                  {% if item.color %}<span class="chip"><i class="fas fa-palette me-1"></i>{{ item.color }}</span>{% endif %}
+                  {% if item.size %}<span class="chip"><i class="fas fa-ruler me-1"></i>{{ item.size }}</span>{% endif %}
+                  {% if item.textile %}<span class="chip"><i class="fas fa-wind me-1"></i>{{ item.textile }}</span>{% endif %}
+                </div>
+                <small class="text-muted">Unit Price: ৳{{ item.price }}</small>
+              </div>
+            </div>
+
+            <div class="cart-item-bottom">
+              <div class="cart-item-qty">
+                <form method="POST" action="{% url 'update_cart' item.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{% url 'customer_cart' %}">
+                  <div class="qty-stepper">
+                    <button type="submit" name="quantity" value="{{ item.quantity|add:-1 }}"><i class="fas fa-minus"></i></button>
+                    <input type="number" value="{{ item.quantity }}" readonly>
+                    <button type="submit" name="quantity" value="{{ item.quantity|add:1 }}"><i class="fas fa-plus"></i></button>
+                  </div>
+                </form>
+              </div>
+
+              <div class="cart-item-subtotal">
+                <small class="text-muted d-block">Subtotal</small>
+                <span class="fw-bold" style="color:#0ea5e9;">৳{{ item.subtotal }}</span>
+              </div>
+
+              <div class="cart-item-actions">
+                <a href="{% url 'checkout' %}?cart_id={{ item.id }}" class="btn btn-sm btn-primary btn-checkout-item">
+                  <i class="fas fa-credit-card me-1"></i>Checkout
+                </a>
+                <form method="POST" action="{% url 'remove_cart' item.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{% url 'customer_cart' %}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger btn-delete-item"><i class="fas fa-trash"></i></button>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card card-custom">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">Order Summary</h6>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Total Items in Cart</span>
+            <span class="fw-semibold">{{ total_quantity }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Cart Total</span>
+            <span class="fw-semibold">৳{{ cart_total }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Shipping</span>
+            <span class="fw-semibold">0</span>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between mb-3">
+            <span class="fw-bold">Total</span>
+            <span class="fw-bold fs-5" style="color:#0ea5e9;">৳{{ cart_total }}</span>
+          </div>
+          <p class="small text-muted mb-0">
+            <i class="fas fa-info-circle me-1"></i>Click "Checkout" on any item to place an order for that item only.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+    <h5 class="fw-bold">Your cart is empty</h5>
+    <p class="text-muted">Browse the shop and add your favorite products.</p>
+    <a href="{% url 'customer_dashboard' %}" class="btn btn-primary mt-2"><i class="fas fa-store me-1"></i>Go to Shop</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

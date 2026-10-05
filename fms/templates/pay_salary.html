@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    <h2 class="fw-bold mb-4"><i class="fas fa-money-bill-wave me-2" style="color:#0ea5e9;"></i>Pay Salary</h2>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="card card-custom">
+          <div class="card-header bg-transparent fw-bold">Salary Summary - {{ month }}</div>
+          <div class="card-body">
+            <table class="table table-sm table-bordered mb-0">
+              <tbody>
+                <tr>
+                  <th class="small text-muted w-50">Employee</th>
+                  <td class="fw-semibold">{{ summary.profile.employee.name }}</td>
+                </tr>
+                <tr>
+                  <th class="small text-muted">Employee ID</th>
+                  <td>{{ summary.profile.public_id }}</td>
+                </tr>
+                <tr>
+                  <th class="small text-muted">Basic Salary</th>
+                  <td>৳{{ summary.basic|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                  <th class="small text-muted">Paid Leave</th>
+                  <td>{{ summary.paid_days }} days</td>
+                </tr>
+                <tr>
+                  <th class="small text-muted">Leave Without Pay</th>
+                  <td>{{ summary.unpaid_days }} days</td>
+                </tr>
+                <tr>
+                  <th class="small text-muted">Leave Deduction</th>
+                  <td class="text-danger">৳{{ summary.leave_deduction|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                  <th class="small text-muted">Unauthorised Absence</th>
+                  <td>{{ summary.absent_days }} days</td>
+                </tr>
+                <tr>
+                  <th class="small text-muted">Attendance Deduction</th>
+                  <td class="text-danger">৳{{ summary.attendance_deduction|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                  <th class="small text-muted">Overtime</th>
+                  <td class="text-success">{{ summary.overtime_hours|floatformat:1 }} hrs = ৳{{ summary.overtime_amount|floatformat:2 }}</td>
+                </tr>
+                <tr class="table-primary">
+                  <th class="small">Net Payable Salary</th>
+                  <td class="fw-bold" style="color:#0ea5e9;">৳{{ summary.net|floatformat:2 }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card card-custom">
+          <div class="card-header bg-transparent fw-bold">Record Payment</div>
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="month" value="{{ month }}">
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Payment Method</label>
+                <select name="payment_method" class="form-select">
+                  {% for value, label in methods %}
+                  <option value="{{ value }}">{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Other Deduction (optional)</label>
+                <input type="number" step="0.01" min="0" name="other_deduction" value="0" class="form-control" id="otherDeduction">
+              </div>
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Bonus (optional)</label>
+                <input type="number" step="0.01" min="0" name="bonus" value="0" class="form-control" id="bonus">
+              </div>
+              <div class="mb-3 p-3 bg-light rounded">
+                <div class="d-flex justify-content-between">
+                  <span class="small fw-semibold">Final Paid Salary</span>
+                  <span class="fw-bold fs-5" id="finalSalary" style="color:#0ea5e9;">৳{{ summary.net|floatformat:2 }}</span>
+                </div>
+                <div class="small text-muted mt-1">Final = Basic - Leave Deduction - Attendance Deduction - Other Deduction + Bonus + Overtime</div>
+              </div>
+              <button type="submit" class="btn btn-success w-100"><i class="fas fa-hand-holding-usd me-1"></i>Confirm Payment</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<script>
+const basic = parseFloat('{{ summary.basic }}') || 0;
+const leaveDed = parseFloat('{{ summary.leave_deduction }}') || 0;
+const attnDed = parseFloat('{{ summary.attendance_deduction }}') || 0;
+const otAmt = parseFloat('{{ summary.overtime_amount }}') || 0;
+function updateFinal() {
+  const other = parseFloat(document.getElementById('otherDeduction').value) || 0;
+  const bonus = parseFloat(document.getElementById('bonus').value) || 0;
+  const final = Math.max(basic - leaveDed - attnDed - other + bonus + otAmt, 0);
+  document.getElementById('finalSalary').textContent = '৳' + final.toFixed(2);
+}
+document.getElementById('otherDeduction').addEventListener('input', updateFinal);
+document.getElementById('bonus').addEventListener('input', updateFinal);
+</script>
+{% endblock %}

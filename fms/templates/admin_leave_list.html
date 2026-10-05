@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="page-title mb-0"><i class="fas fa-calendar-alt me-2"></i>Leave Requests</h4>
+  <div>
+    <a href="{% url 'admin_leave_list' %}" class="btn btn-outline-secondary btn-sm {% if not current_filter %}active{% endif %}">All</a>
+    <a href="{% url 'admin_leave_list' %}?status=Pending" class="btn btn-outline-warning btn-sm {% if current_filter == 'Pending' %}active{% endif %}">Pending</a>
+    <a href="{% url 'admin_leave_list' %}?status=Approved" class="btn btn-outline-success btn-sm {% if current_filter == 'Approved' %}active{% endif %}">Approved</a>
+    <a href="{% url 'admin_leave_list' %}?status=Rejected" class="btn btn-outline-danger btn-sm {% if current_filter == 'Rejected' %}active{% endif %}">Rejected</a>
+    <a href="{% url 'admin_leave_deductions' %}" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-invoice-dollar me-1"></i>Deduction Report</a>
+  </div>
+</div>
+
+<div class="card card-custom mb-4">
+  <div class="card-body">
+    <form method="GET" class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold">Search Employee</label>
+        <input type="text" name="q" class="form-control" placeholder="Employee name..." value="{{ q }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold">Filter by Month</label>
+        <input type="month" name="month" class="form-control" value="{{ month }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold">Leave Type</label>
+        <select name="leave_type" class="form-select">
+          <option value="">-- All Types --</option>
+          {% for key, cfg in leave_types.items %}
+          <option value="{{ key }}" {% if leave_type_filter == key %}selected{% endif %}>{{ cfg.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search me-1"></i>Filter</button>
+        <a href="{% url 'admin_leave_list' %}" class="btn btn-outline-secondary w-100">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card card-custom">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Employee</th>
+          <th>Type</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Days</th>
+          <th>Paid/Unpaid</th>
+          <th>Deduction</th>
+          <th>Reason</th>
+          <th>Status</th>
+          <th>Applied</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for leave in leaves %}
+        <tr>
+          <td>
+            <strong>{{ leave.employee.employee.name }}</strong>
+            <br><small class="text-muted">{{ leave.employee.public_id }}</small>
+            <br><small class="text-success">
+              CL {{ leave.emp_balance.Casual.remaining|default:"-" }}/10 ·
+              SL {{ leave.emp_balance.Sick.remaining|default:"-" }}/14 ·
+              EL {{ leave.emp_balance.Earned.remaining|default:"-" }} ·
+              Fest {{ leave.emp_balance.Festival.remaining|default:"-" }}/11
+              {% if leave.emp_balance.Maternity %} · Mat {{ leave.emp_balance.Maternity.remaining|default:"-" }}{% endif %}
+            </small>
+          </td>
+          <td><span class="badge bg-info">{{ leave.get_leave_type_display }}</span></td>
+          <td>{{ leave.start_date|date:"M d" }}</td>
+          <td>{{ leave.end_date|date:"M d" }}</td>
+          <td>{{ leave.total_days }}</td>
+          <td class="small">{{ leave.paid_days }}/{{ leave.unpaid_days }}</td>
+          <td>
+            {% if leave.deduction_amount %}
+              <span class="text-danger fw-semibold small">৳{{ leave.deduction_amount|floatformat:2 }}</span>
+            {% else %}<span class="text-muted small">-</span>{% endif %}
+          </td>
+          <td>{{ leave.reason|truncatewords:8|default:"-" }}</td>
+          <td>
+            <span class="badge bg-{% if leave.status == 'Approved' %}success{% elif leave.status == 'Rejected' %}danger{% else %}warning text-dark{% endif %}">
+              {{ leave.status }}
+            </span>
+          </td>
+          <td class="small">{{ leave.applied_on|date:"M d" }}</td>
+          <td>
+            {% if leave.status == 'Pending' %}
+            <form method="post" action="{% url 'admin_approve_leave' leave.id %}" class="d-flex gap-1" style="display:inline-flex;">
+              {% csrf_token %}
+              <input type="text" name="admin_remarks" placeholder="Remarks" class="form-control form-control-sm" style="width:100px;">
+              <button type="submit" name="action" value="approve" class="btn btn-success btn-sm" title="Approve"><i class="fas fa-check"></i></button>
+              <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm" title="Reject"><i class="fas fa-times"></i></button>
+            </form>
+            {% else %}
+            <small class="text-muted">{{ leave.admin_remarks|default:"-" }}</small>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="11" class="text-center text-muted py-4">No leave requests found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-transparent small text-muted">CL = Casual, SL = Sick, EL = Earned, Fest = Festival, Mat = Maternity (current remaining balance)</div>
+</div>
+{% endblock %}

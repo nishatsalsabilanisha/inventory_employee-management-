@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fas fa-network-wired me-2" style="color:#0ea5e9;"></i>Allowed Office IPs</h2>
+<p class="text-muted">Employees can only mark attendance when their IP matches one of the IPs below.</p>
+
+<div class="row g-4">
+  <div class="col-md-5">
+    <div class="card card-custom">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3">Add Office IP</h6>
+        <form method="POST">
+          {% csrf_token %}
+          {{ form.non_field_errors }}
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">IP Address</label>
+            {{ form.ip_address }}
+            {% if form.ip_address.errors %}
+              <div class="text-danger small">{{ form.ip_address.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Label (optional)</label>
+            {{ form.label }}
+          </div>
+          <div class="form-check mb-3">
+            {{ form.is_active }}
+            <label class="form-check-label" for="id_is_active">Active</label>
+          </div>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-plus me-1"></i>Add IP</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    <div class="card card-custom">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3">Office IP List ({{ ips|length }})</h6>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>IP Address</th>
+                <th>Label</th>
+                <th>Status</th>
+                <th>Added</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ip in ips %}
+              <tr>
+                <td class="fw-semibold"><i class="fas fa-server me-1" style="color:#0ea5e9;"></i>{{ ip.ip_address }}</td>
+                <td>{{ ip.label|default:"--" }}</td>
+                <td>
+                  <span class="badge bg-{% if ip.is_active %}success{% else %}secondary{% endif %}">
+                    {% if ip.is_active %}Active{% else %}Inactive{% endif %}
+                  </span>
+                </td>
+                <td class="small">{{ ip.created_at|date:"M d, Y" }}</td>
+                <td>
+                  <a href="{% url 'office_ip_edit' ip.pk %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
+                  <a href="{% url 'office_ip_delete' ip.pk %}" class="btn btn-sm btn-outline-danger"
+                     onclick="return confirm('Delete IP {{ ip.ip_address }}?');"><i class="fas fa-trash"></i></a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" class="text-center text-muted py-4">No office IPs added yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

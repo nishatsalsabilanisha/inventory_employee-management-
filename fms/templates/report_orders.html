@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load static %}
+{% load fms_tags %}
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fas fa-file-alt me-2" style="color:#0ea5e9;"></i>Order Report</h2>
+
+<form method="get" class="card card-custom mb-4">
+  <div class="card-body py-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label small fw-semibold mb-1">From</label>
+        <input type="date" name="from" value="{{ from_date|date:'Y-m-d' }}" class="form-control" style="max-width:180px;">
+      </div>
+      <div class="col-auto">
+        <label class="form-label small fw-semibold mb-1">To</label>
+        <input type="date" name="to" value="{{ to_date|date:'Y-m-d' }}" class="form-control" style="max-width:180px;">
+      </div>
+      <div class="col-auto">
+        <label class="form-label small fw-semibold mb-1">Status</label>
+        <select name="status" class="form-select" style="min-width:150px;">
+          <option value="">All</option>
+          {% for value, label in statuses %}
+            <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold mb-1">Search</label>
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Customer / product...">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i>Apply</button>
+      </div>
+      <div class="col-auto ms-auto">
+        <a href="{% url 'report_orders' %}?from={{ from_date|date:'Y-m-d' }}&to={{ to_date|date:'Y-m-d' }}&status={{ status_filter }}&q={{ q }}&export=pdf" class="btn btn-outline-danger"><i class="fas fa-file-pdf me-1"></i>PDF</a>
+        <a href="{% url 'report_orders' %}?from={{ from_date|date:'Y-m-d' }}&to={{ to_date|date:'Y-m-d' }}&status={{ status_filter }}&q={{ q }}&export=excel" class="btn btn-outline-success"><i class="fas fa-file-excel me-1"></i>Excel</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#0ea5e9;">{{ summary.total }}</h4>
+      <small class="text-muted">Orders</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0">{{ summary.items }}</h4>
+      <small class="text-muted">Items Sold</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0" style="color:#28a745;">৳{{ summary.revenue|floatformat:0 }}</h4>
+      <small class="text-muted">Total Value</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card card-custom text-center py-3">
+      <h4 class="fw-bold mb-0">৳{{ summary.avg|floatformat:0 }}</h4>
+      <small class="text-muted">Avg / Order</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-4">
+    <div class="card card-custom p-3">
+      <small class="text-muted d-block mb-2">Orders by Status</small>
+      {% for value, label in statuses %}
+        {% with st=by_status|get_item:value %}
+          <div class="d-flex justify-content-between small mb-1">
+            <span>{{ label }}</span>
+            <span><strong>{{ st.count }}</strong> <span class="text-muted">৳{{ st.total|floatformat:0 }}</span></span>
+          </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card card-custom">
+  <div class="card-header bg-transparent fw-bold">Orders - {{ from_date }} to {{ to_date }}</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Order</th>
+            <th>Customer</th>
+            <th>Product</th>
+            <th class="text-center">Qty</th>
+            <th class="text-end">Unit Price</th>
+            <th class="text-end">Total</th>
+            <th>Payment</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in orders %}
+          <tr>
+            <td class="fw-bold">#{{ o.id }}</td>
+            <td>{{ o.customer.name }}</td>
+            <td>{{ o.product.name }}</td>
+            <td class="text-center">{{ o.quantity }}</td>
+            <td class="text-end">৳{{ o.unit_price|default:o.product.price|floatformat:2 }}</td>
+            <td class="text-end fw-bold">৳{{ o.total_amount|floatformat:2 }}</td>
+            <td class="small">{{ o.payment_method }}</td>
+            <td>
+              {% if o.status == "Cancelled" or o.status == "Returned" %}
+                <span class="badge bg-danger">{{ o.status }}</span>
+              {% elif o.status == "Pending" %}
+                <span class="badge bg-warning text-dark">{{ o.status }}</span>
+              {% else %}
+                <span class="badge bg-success">{{ o.status }}</span>
+              {% endif %}
+            </td>
+            <td class="small">{{ o.created_at|date:"Y-m-d" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="9" class="text-center text-muted py-4">No orders in this period.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

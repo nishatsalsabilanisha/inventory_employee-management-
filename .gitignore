@@ -2,15 +2,16 @@
 .env.*
 !.env.example
 
-db.sqlite3
-sqlite_dump.json
-terminalcodes.txt
-
-media/buyer_photos/
-media/employee_photos/
+.vercel/
+.venv/
+venv/
+static/
+staticfiles/
 
 __pycache__/
 *.py[cod]
-.venv/
-venv/
-staticfiles/
+
+media/
+db.sqlite3
+sqlite_dump.json
+terminalcodes.txt

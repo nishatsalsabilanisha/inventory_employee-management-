@@ -5,7 +5,10 @@
 .vercel/
 .venv/
 venv/
+<<<<<<< HEAD
 .vscode/
+=======
+>>>>>>> bfe3dde3035582d7ff3128ca784822b006540202
 static/
 staticfiles/
 
@@ -15,4 +18,8 @@ __pycache__/
 media/
 db.sqlite3
 sqlite_dump.json
+<<<<<<< HEAD
 terminalcodes.txt
+=======
+terminalcodes.txt
+>>>>>>> bfe3dde3035582d7ff3128ca784822b006540202

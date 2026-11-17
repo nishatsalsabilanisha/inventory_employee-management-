@@ -122,70 +122,107 @@ WSGI_APPLICATION = 'fms.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-USE_SQLITE = _env("USE_SQLITE", "True" if not IS_VERCEL and not _env("DATABASE_URL") else "False").lower() in ("1", "true", "yes")
+def _parse_database_url(url_str):
+    if not url_str:
+        return None
+    import re
+    cleaned = url_str.strip().strip("'\"")
+    # Clean accidental [brackets] from instructions
+    cleaned = re.sub(r'\[(.*?)\]', r'\1', cleaned)
 
-if USE_SQLITE:
+    m = re.match(r'^(postgres(?:ql)?):\/\/(.*)$', cleaned)
+    if not m:
+        return None
+    rest = m.group(2)
+
+    if '@' not in rest:
+        return None
+    last_at_idx = rest.rfind('@')
+    user_pass = rest[:last_at_idx]
+    host_db = rest[last_at_idx + 1:]
+
+    if ':' in user_pass:
+        first_colon_idx = user_pass.find(':')
+        user = user_pass[:first_colon_idx]
+        password = user_pass[first_colon_idx + 1:]
+    else:
+        user = user_pass
+        password = ''
+
+    query_str = ''
+    if '?' in host_db:
+        host_db, query_str = host_db.split('?', 1)
+
+    if '/' in host_db:
+        host_port, dbname = host_db.split('/', 1)
+    else:
+        host_port = host_db
+        dbname = 'postgres'
+
+    if ':' in host_port:
+        host, port = host_port.split(':', 1)
+    else:
+        host = host_port
+        port = '5432'
+
+    options = {}
+    if query_str:
+        options = {k: v[-1] for k, v in parse_qs(query_str).items()}
+    if not DEBUG:
+        options.setdefault("sslmode", _env("DB_SSLMODE", "require"))
+
+    is_pooler = (port == "6543") or ("pooler.supabase.com" in host)
+    if is_pooler:
+        options.setdefault("prepare_threshold", None)
+
+    db_config = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": unquote(dbname),
+        "USER": unquote(user),
+        "PASSWORD": unquote(password),
+        "HOST": host,
+        "PORT": port,
+        "OPTIONS": options,
+    }
+    if is_pooler:
+        db_config["DISABLE_SERVER_SIDE_CURSORS"] = True
+    return db_config
+
+
+USE_SQLITE = False if IS_VERCEL else _env("USE_SQLITE", "True" if not _env("DATABASE_URL") else "False").lower() in ("1", "true", "yes")
+
+_db_url = _env("DATABASE_URL") or _env("POSTGRES_URL")
+_parsed_db = None
+if _db_url and not USE_SQLITE:
+    try:
+        _parsed_db = _parse_database_url(_db_url)
+    except Exception:
+        _parsed_db = None
+
+if _parsed_db:
+    DATABASES = {"default": _parsed_db}
+elif not USE_SQLITE and (_env("DB_PASSWORD") or _env("DB_HOST")):
+    DB_SSLMODE = _env("DB_SSLMODE", "require" if not DEBUG else "")
+    DB_OPTIONS = {"sslmode": DB_SSLMODE} if DB_SSLMODE else {}
+
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": _env("DB_NAME", "touch_and_solve_db"),
+            "USER": _env("DB_USER", "postgres"),
+            "PASSWORD": _env("DB_PASSWORD", ""),
+            "HOST": _env("DB_HOST", "localhost"),
+            "PORT": _env("DB_PORT", "5432"),
+            "OPTIONS": DB_OPTIONS,
+        }
+    }
+else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
-else:
-    DATABASE_URL = _env("DATABASE_URL") or _env("POSTGRES_URL")
-    if DATABASE_URL:
-        parsed_database_url = urlparse(DATABASE_URL)
-        if parsed_database_url.scheme not in ("postgres", "postgresql"):
-            raise ValueError("DATABASE_URL must use the postgres or postgresql scheme.")
-
-        DB_OPTIONS = {
-            key: values[-1]
-            for key, values in parse_qs(parsed_database_url.query).items()
-        }
-        if not DEBUG:
-            DB_OPTIONS.setdefault("sslmode", _env("DB_SSLMODE", "require"))
-
-        is_pooler = (parsed_database_url.port == 6543) or bool(
-            parsed_database_url.hostname and "pooler.supabase.com" in parsed_database_url.hostname
-        )
-        if is_pooler:
-            DB_OPTIONS.setdefault("prepare_threshold", None)
-
-        DATABASES = {
-            "default": {
-                "ENGINE": "django.db.backends.postgresql",
-                "NAME": unquote(parsed_database_url.path.lstrip("/")),
-                "USER": unquote(parsed_database_url.username or ""),
-                "PASSWORD": unquote(parsed_database_url.password or ""),
-                "HOST": parsed_database_url.hostname or "",
-                "PORT": str(parsed_database_url.port or "5432"),
-                "OPTIONS": DB_OPTIONS,
-            }
-        }
-        if is_pooler:
-            DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
-    elif _env("DB_PASSWORD") or _env("DB_HOST"):
-        DB_SSLMODE = _env("DB_SSLMODE", "require" if not DEBUG else "")
-        DB_OPTIONS = {"sslmode": DB_SSLMODE} if DB_SSLMODE else {}
-
-        DATABASES = {
-            "default": {
-                "ENGINE": "django.db.backends.postgresql",
-                "NAME": _env("DB_NAME", "touch_and_solve_db"),
-                "USER": _env("DB_USER", "postgres"),
-                "PASSWORD": _env("DB_PASSWORD", ""),
-                "HOST": _env("DB_HOST", "localhost"),
-                "PORT": _env("DB_PORT", "5432"),
-                "OPTIONS": DB_OPTIONS,
-            }
-        }
-    else:
-        DATABASES = {
-            "default": {
-                "ENGINE": "django.db.backends.sqlite3",
-                "NAME": BASE_DIR / "db.sqlite3",
-            }
-        }
 
 
 # Password validation

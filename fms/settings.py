@@ -38,7 +38,6 @@ def _env(key, default="", fallback_key=None):
 IS_VERCEL = _env("VERCEL", "").lower() in ("1", "true", "yes")
 
 # SECURITY WARNING: keep the secret key used in production secret!
-<<<<<<< HEAD
 SECRET_KEY = (
     _env("DJANGO_SECRET_KEY", "", "DJANGO_SECRET_KEY1")
     or "django-insecure-vercel-auto-fallback-secret-key-change-in-production-1234567890"
@@ -62,41 +61,12 @@ _vercel_hosts = [
     if _env(name).strip()
 ]
 ALLOWED_HOSTS = _configured_hosts or _vercel_hosts or [".vercel.app", "localhost", "127.0.0.1", "*"]
-=======
-SECRET_KEY = _env("DJANGO_SECRET_KEY", "")
-
-# SECURITY WARNING: enable debug mode only for local development.
-DEBUG = False if IS_VERCEL else _env("DJANGO_DEBUG", "True").lower() in (
-    "1",
-    "true",
-    "yes",
-)
-
-_configured_hosts = [
-    host.strip()
-    for host in _env("DJANGO_ALLOWED_HOSTS", "").split(",")
-    if host.strip()
-]
-_vercel_hosts = [
-    _env(name).strip()
-    for name in ("VERCEL_URL", "VERCEL_PROJECT_PRODUCTION_URL")
-    if _env(name).strip()
-]
-ALLOWED_HOSTS = _configured_hosts or _vercel_hosts
-
-if not DEBUG and not SECRET_KEY:
-    raise RuntimeError("DJANGO_SECRET_KEY is required when DJANGO_DEBUG=False.")
-
-if not DEBUG and not ALLOWED_HOSTS:
-    raise RuntimeError("DJANGO_ALLOWED_HOSTS is required when DJANGO_DEBUG=False.")
->>>>>>> bfe3dde3035582d7ff3128ca784822b006540202
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in _env("CSRF_TRUSTED_ORIGINS", "").split(",")
     if origin.strip()
 ]
-<<<<<<< HEAD
 if IS_VERCEL or not CSRF_TRUSTED_ORIGINS:
     for host in _vercel_hosts:
         origin = "https://" + host.removeprefix("https://").removeprefix("http://").rstrip("/")
@@ -104,13 +74,6 @@ if IS_VERCEL or not CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(origin)
     if "https://*.vercel.app" not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append("https://*.vercel.app")
-=======
-if IS_VERCEL and not CSRF_TRUSTED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS = [
-        "https://" + host.removeprefix("https://").removeprefix("http://").rstrip("/")
-        for host in _vercel_hosts
-    ]
->>>>>>> bfe3dde3035582d7ff3128ca784822b006540202
 
 
 # Application definition
@@ -159,63 +122,70 @@ WSGI_APPLICATION = 'fms.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-<<<<<<< HEAD
-DATABASE_URL = _env("DATABASE_URL") or _env("POSTGRES_URL")
-=======
-DATABASE_URL = _env("DATABASE_URL")
->>>>>>> bfe3dde3035582d7ff3128ca784822b006540202
-if DATABASE_URL:
-    parsed_database_url = urlparse(DATABASE_URL)
-    if parsed_database_url.scheme not in ("postgres", "postgresql"):
-        raise ValueError("DATABASE_URL must use the postgres or postgresql scheme.")
+USE_SQLITE = _env("USE_SQLITE", "True" if not IS_VERCEL and not _env("DATABASE_URL") else "False").lower() in ("1", "true", "yes")
 
-    DB_OPTIONS = {
-        key: values[-1]
-        for key, values in parse_qs(parsed_database_url.query).items()
-    }
-    if not DEBUG:
-        DB_OPTIONS.setdefault("sslmode", _env("DB_SSLMODE", "require"))
-
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": unquote(parsed_database_url.path.lstrip("/")),
-            "USER": unquote(parsed_database_url.username or ""),
-            "PASSWORD": unquote(parsed_database_url.password or ""),
-            "HOST": parsed_database_url.hostname or "",
-            "PORT": str(parsed_database_url.port or "5432"),
-            "OPTIONS": DB_OPTIONS,
-        }
-    }
-<<<<<<< HEAD
-elif _env("DB_PASSWORD") or _env("DB_HOST"):
-=======
-else:
->>>>>>> bfe3dde3035582d7ff3128ca784822b006540202
-    DB_SSLMODE = _env("DB_SSLMODE", "require" if not DEBUG else "")
-    DB_OPTIONS = {"sslmode": DB_SSLMODE} if DB_SSLMODE else {}
-
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": _env("DB_NAME", "touch_and_solve_db"),
-            "USER": _env("DB_USER", "postgres"),
-            "PASSWORD": _env("DB_PASSWORD", ""),
-            "HOST": _env("DB_HOST", "localhost"),
-            "PORT": _env("DB_PORT", "5432"),
-            "OPTIONS": DB_OPTIONS,
-        }
-<<<<<<< HEAD
-    }
-else:
+if USE_SQLITE:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / "db.sqlite3",
         }
-=======
->>>>>>> bfe3dde3035582d7ff3128ca784822b006540202
     }
+else:
+    DATABASE_URL = _env("DATABASE_URL") or _env("POSTGRES_URL")
+    if DATABASE_URL:
+        parsed_database_url = urlparse(DATABASE_URL)
+        if parsed_database_url.scheme not in ("postgres", "postgresql"):
+            raise ValueError("DATABASE_URL must use the postgres or postgresql scheme.")
+
+        DB_OPTIONS = {
+            key: values[-1]
+            for key, values in parse_qs(parsed_database_url.query).items()
+        }
+        if not DEBUG:
+            DB_OPTIONS.setdefault("sslmode", _env("DB_SSLMODE", "require"))
+
+        is_pooler = (parsed_database_url.port == 6543) or bool(
+            parsed_database_url.hostname and "pooler.supabase.com" in parsed_database_url.hostname
+        )
+        if is_pooler:
+            DB_OPTIONS.setdefault("prepare_threshold", None)
+
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": unquote(parsed_database_url.path.lstrip("/")),
+                "USER": unquote(parsed_database_url.username or ""),
+                "PASSWORD": unquote(parsed_database_url.password or ""),
+                "HOST": parsed_database_url.hostname or "",
+                "PORT": str(parsed_database_url.port or "5432"),
+                "OPTIONS": DB_OPTIONS,
+            }
+        }
+        if is_pooler:
+            DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
+    elif _env("DB_PASSWORD") or _env("DB_HOST"):
+        DB_SSLMODE = _env("DB_SSLMODE", "require" if not DEBUG else "")
+        DB_OPTIONS = {"sslmode": DB_SSLMODE} if DB_SSLMODE else {}
+
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": _env("DB_NAME", "touch_and_solve_db"),
+                "USER": _env("DB_USER", "postgres"),
+                "PASSWORD": _env("DB_PASSWORD", ""),
+                "HOST": _env("DB_HOST", "localhost"),
+                "PORT": _env("DB_PORT", "5432"),
+                "OPTIONS": DB_OPTIONS,
+            }
+        }
+    else:
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": BASE_DIR / "db.sqlite3",
+            }
+        }
 
 
 # Password validation
@@ -250,8 +220,6 @@ TIME_ZONE = "Asia/Dhaka"
 
 USE_I18N = True
 
-USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -259,7 +227,6 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
-<<<<<<< HEAD
 # Object Storage (e.g. Supabase Storage / S3) is optional for persistent uploads.
 # If credentials are not provided, it falls back to local FileSystemStorage so deployments never fail.
 AWS_ACCESS_KEY_ID = _env("AWS_ACCESS_KEY_ID", "")
@@ -279,17 +246,6 @@ USE_SUPABASE_STORAGE = _env(
 ).lower() in ("1", "true", "yes")
 
 if USE_SUPABASE_STORAGE and HAS_S3_STORAGE:
-=======
-# Supabase Storage is an S3-compatible service. It is enabled only when the
-# deployment variables are present, keeping local development on the filesystem.
-USE_SUPABASE_STORAGE = _env("USE_SUPABASE_STORAGE", "False").lower() in (
-    "1",
-    "true",
-    "yes",
-)
-
-if USE_SUPABASE_STORAGE:
->>>>>>> bfe3dde3035582d7ff3128ca784822b006540202
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
@@ -298,19 +254,10 @@ if USE_SUPABASE_STORAGE:
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
-<<<<<<< HEAD
     AWS_S3_REGION_NAME = _env("AWS_S3_REGION_NAME", "us-east-1")
     AWS_S3_SIGNATURE_VERSION = _env("AWS_S3_SIGNATURE_VERSION", "s3v4")
     if AWS_S3_SIGNATURE_VERSION.lower() == "aws4":
         AWS_S3_SIGNATURE_VERSION = "s3v4"
-=======
-    AWS_ACCESS_KEY_ID = _env("AWS_ACCESS_KEY_ID", "")
-    AWS_SECRET_ACCESS_KEY = _env("AWS_SECRET_ACCESS_KEY", "")
-    AWS_STORAGE_BUCKET_NAME = _env("AWS_STORAGE_BUCKET_NAME", "")
-    AWS_S3_REGION_NAME = _env("AWS_S3_REGION_NAME", "us-east-1")
-    AWS_S3_ENDPOINT_URL = _env("AWS_S3_ENDPOINT_URL", "")
-    AWS_S3_SIGNATURE_VERSION = _env("AWS_S3_SIGNATURE_VERSION", "aws4")
->>>>>>> bfe3dde3035582d7ff3128ca784822b006540202
     AWS_S3_ADDRESSING_STYLE = _env("AWS_S3_ADDRESSING_STYLE", "path")
     AWS_S3_FILE_OVERWRITE = _env("AWS_S3_FILE_OVERWRITE", "False").lower() in (
         "1",

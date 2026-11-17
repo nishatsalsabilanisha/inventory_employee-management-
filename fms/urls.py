@@ -159,7 +159,7 @@ urlpatterns = [
     path('admin/reports/inventory/', views.report_inventory, name='report_inventory'),
     path('admin/reports/orders/', views.report_orders, name='report_orders'),
 
-    
+    path('admin/', admin.site.urls),
 ]
 # Keep this at the VERY END
 if settings.DEBUG:

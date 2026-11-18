@@ -312,7 +312,9 @@ if USE_SUPABASE_STORAGE and HAS_S3_STORAGE:
         "yes",
     )
     if not AWS_QUERYSTRING_AUTH:
-        endpoint_netloc = urlparse(AWS_S3_ENDPOINT_URL).netloc
+        endpoint_netloc = urlparse(AWS_S3_ENDPOINT_URL).netloc.replace(
+            ".storage.supabase.co", ".supabase.co"
+        )
         default_custom_domain = (
             f"{endpoint_netloc}/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}"
             if "supabase.co" in AWS_S3_ENDPOINT_URL

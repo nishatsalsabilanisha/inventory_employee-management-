@@ -306,6 +306,19 @@ if USE_SUPABASE_STORAGE and HAS_S3_STORAGE:
         "true",
         "yes",
     )
+    AWS_QUERYSTRING_AUTH = _env("AWS_QUERYSTRING_AUTH", "False").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    if not AWS_QUERYSTRING_AUTH:
+        endpoint_netloc = urlparse(AWS_S3_ENDPOINT_URL).netloc
+        default_custom_domain = (
+            f"{endpoint_netloc}/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}"
+            if "supabase.co" in AWS_S3_ENDPOINT_URL
+            else ""
+        )
+        AWS_S3_CUSTOM_DOMAIN = _env("AWS_S3_CUSTOM_DOMAIN", default_custom_domain)
 else:
     STORAGES = {
         "default": {

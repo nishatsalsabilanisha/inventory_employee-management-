@@ -1234,17 +1234,39 @@ def customer_checkout(request):
         order_ids.append(order.id)
 
     tran_id = f"CHECKOUT-{uuid.uuid4().hex[:16].upper()}"
+    store_id = getattr(settings, "SSL_COMMERZ_STORE_ID", "").strip()
+    store_pass = getattr(settings, "SSL_COMMERZ_STORE_PASSWORD", "").strip()
+
     txn = PaymentTransaction.objects.create(
         order_id=tran_id,
         customer=customer,
         amount=total_amount,
         currency="BDT",
         status="pending",
-        metadata={"order_ids": order_ids},
+        metadata={
+            "order_ids": order_ids,
+            "shipping_name": customer.name,
+            "shipping_email": customer.email,
+            "shipping_phone": str(customer.phone or "01700000000"),
+            "shipping_address": getattr(customer, "address", "") or "Dhaka, Bangladesh",
+            "shipping_city": "Dhaka",
+            "shipping_postcode": "1000",
+        },
     )
+
+    if not store_id or not store_pass:
+        txn.status = "failed"
+        txn.metadata["error"] = "missing_store_credentials"
+        txn.save()
+        messages.error(
+            request,
+            "Payment gateway is not configured yet (missing SSL_COMMERZ_STORE_ID).",
+        )
+        return redirect("customer_dashboard")
 
     success_url = request.build_absolute_uri(reverse("payment_success"))
     fail_url = request.build_absolute_uri(reverse("payment_fail"))
+    ipn_url = request.build_absolute_uri(reverse("ssl_ipn"))
     api_url = getattr(
         settings,
         "SSLCOMMERZ_API_URL",
@@ -1252,17 +1274,30 @@ def customer_checkout(request):
     )
 
     payload = {
-        "store_id": getattr(settings, "SSL_COMMERZ_STORE_ID", ""),
-        "store_passwd": getattr(settings, "SSL_COMMERZ_STORE_PASSWORD", ""),
-        "total_amount": str(total_amount),
+        "store_id": store_id,
+        "store_passwd": store_pass,
+        "total_amount": f"{float(total_amount):.2f}",
         "currency": "BDT",
         "tran_id": tran_id,
         "success_url": success_url,
         "fail_url": fail_url,
         "cancel_url": fail_url,
-        "cus_name": customer.name,
-        "cus_email": customer.email,
-        "cus_phone": customer.phone,
+        "ipn_url": ipn_url,
+        "cus_name": customer.name or "Customer",
+        "cus_email": customer.email or "customer@example.com",
+        "cus_phone": str(customer.phone or "01700000000"),
+        "cus_add1": getattr(customer, "address", "") or "Dhaka, Bangladesh",
+        "cus_city": "Dhaka",
+        "cus_state": "Dhaka",
+        "cus_postcode": "1000",
+        "cus_country": "Bangladesh",
+        "ship_name": customer.name or "Customer",
+        "ship_add1": getattr(customer, "address", "") or "Dhaka, Bangladesh",
+        "ship_city": "Dhaka",
+        "ship_postcode": "1000",
+        "ship_country": "Bangladesh",
+        "shipping_method": "NO",
+        "num_of_item": total_quantity,
         "product_name": "Multiple items",
         "product_category": "Fashion",
         "product_profile": "general",
@@ -1791,29 +1826,70 @@ def buy_product(request, product_id):
         )
 
         tran_id = f"ORDER-{uuid.uuid4().hex[:16].upper()}"
+        store_id = getattr(settings, "SSL_COMMERZ_STORE_ID", "").strip()
+        store_pass = getattr(settings, "SSL_COMMERZ_STORE_PASSWORD", "").strip()
+
+        shipping_address = getattr(customer, "address", "") or "Dhaka, Bangladesh"
+        shipping_phone = str(customer.phone or "01700000000")
+
         PaymentTransaction.objects.create(
             order_id=tran_id,
             customer=customer,
             amount=total,
             currency="BDT",
             status="pending",
+            metadata={
+                "order_id": order.id,
+                "shipping_name": customer.name,
+                "shipping_email": customer.email,
+                "shipping_phone": shipping_phone,
+                "shipping_address": shipping_address,
+                "shipping_city": "Dhaka",
+                "shipping_postcode": "1000",
+            },
         )
+
+        if not store_id or not store_pass:
+            error_message = "Payment gateway is not configured (missing SSL_COMMERZ_STORE_ID)."
+            return render(
+                request,
+                "buy.html",
+                {
+                    "product": product,
+                    "customer": customer,
+                    "error_message": error_message,
+                },
+            )
 
         success_url = request.build_absolute_uri(reverse("payment_success"))
         fail_url = request.build_absolute_uri(reverse("payment_fail"))
+        ipn_url = request.build_absolute_uri(reverse("ssl_ipn"))
 
         ssl_data = {
-            "store_id": getattr(settings, "SSL_COMMERZ_STORE_ID", ""),
-            "store_passwd": getattr(settings, "SSL_COMMERZ_STORE_PASSWORD", ""),
-            "total_amount": str(total),
+            "store_id": store_id,
+            "store_passwd": store_pass,
+            "total_amount": f"{float(total):.2f}",
             "currency": "BDT",
             "tran_id": tran_id,
             "success_url": success_url,
             "fail_url": fail_url,
             "cancel_url": fail_url,
-            "cus_name": customer.name,
-            "cus_email": customer.email,
-            "cus_phone": customer.phone,
+            "ipn_url": ipn_url,
+            "cus_name": customer.name or "Customer",
+            "cus_email": customer.email or "customer@example.com",
+            "cus_phone": shipping_phone,
+            "cus_add1": shipping_address,
+            "cus_city": "Dhaka",
+            "cus_state": "Dhaka",
+            "cus_postcode": "1000",
+            "cus_country": "Bangladesh",
+            "ship_name": customer.name or "Customer",
+            "ship_add1": shipping_address,
+            "ship_city": "Dhaka",
+            "ship_postcode": "1000",
+            "ship_country": "Bangladesh",
+            "shipping_method": "NO",
+            "num_of_item": qty,
             "product_name": product.name,
             "product_category": "Fashion",
             "product_profile": "general",
@@ -2132,24 +2208,52 @@ def employee_production_delete(request, pk):
 @csrf_exempt
 def payment_success(request):
     tran_id = request.POST.get("tran_id") or request.GET.get("tran_id")
+    val_id = request.POST.get("val_id") or request.GET.get("val_id")
 
     payment = PaymentTransaction.objects.filter(order_id=tran_id).first()
 
     if payment:
         if payment.status != "success":
             payment.status = "success"
+            if val_id:
+                payment.ssl_txn_id = val_id
+            payment.metadata = payment.metadata or {}
+            if request.POST:
+                payment.metadata["callback_post"] = {
+                    k: v for k, v in request.POST.items() if k != "store_passwd"
+                }
             payment.save()
+
+            # Ensure customer is logged in so dashboard and navigation work seamlessly
+            if payment.customer:
+                request.session["customer_id"] = payment.customer.id
 
             # If customer purchase, create orders and decrease stock atomically
             if payment.customer:
-                meta_cart_ids = (payment.metadata or {}).get("cart_item_id") or []
+                meta = payment.metadata or {}
+                meta_cart_ids = meta.get("cart_item_id") or []
                 cart_items = Cart.objects.filter(
                     customer=payment.customer, id__in=meta_cart_ids
                 ).select_related("product")
-                if not cart_items:
+                if not cart_items.exists() and not meta_cart_ids:
                     cart_items = Cart.objects.filter(
                         customer=payment.customer
                     ).select_related("product")
+
+                shipping_address = (
+                    meta.get("shipping_address")
+                    or request.session.get("shipping_address")
+                    or getattr(payment.customer, "address", "")
+                    or "Dhaka, Bangladesh"
+                )
+                phone = (
+                    meta.get("shipping_phone")
+                    or meta.get("phone")
+                    or request.session.get("phone")
+                    or payment.customer.phone
+                    or ""
+                )
+
                 if cart_items.exists():
                     product_ids = [ci.product.sl for ci in cart_items]
                     with transaction.atomic():
@@ -2166,8 +2270,8 @@ def payment_success(request):
                                     total_amount=item.subtotal,
                                     payment_method="SSLCommerz",
                                     payment_status="Paid",
-                                    shipping_address=request.session.get("shipping_address", ""),
-                                    phone=request.session.get("phone", ""),
+                                    shipping_address=shipping_address,
+                                    phone=phone,
                                     status="Paid",
                                     color=item.color,
                                     size=item.size,
@@ -2221,18 +2325,28 @@ def payment_success(request):
                     order.status = "Paid"
                     order.save()
 
+        elif payment.customer and not request.session.get("customer_id"):
+            request.session["customer_id"] = payment.customer.id
+
     return render(request, "success.html", {"payment": payment})
 
 
 @csrf_exempt
 def payment_fail(request):
-    tran_id = request.POST.get("tran_id")
+    tran_id = request.POST.get("tran_id") or request.GET.get("tran_id")
 
     payment = PaymentTransaction.objects.filter(order_id=tran_id).first()
 
     if payment:
         payment.status = "failed"
+        if request.POST:
+            payment.metadata = payment.metadata or {}
+            payment.metadata["fail_post"] = {
+                k: v for k, v in request.POST.items() if k != "store_passwd"
+            }
         payment.save()
+        if payment.customer and not request.session.get("customer_id"):
+            request.session["customer_id"] = payment.customer.id
 
     return render(request, "fail.html", {"payment": payment})
 
@@ -2947,27 +3061,26 @@ def retry_payment_transaction(request, pk):
     payload = {
         "store_id": store_id,
         "store_passwd": store_pass,
-        "total_amount": str(txn.amount),
+        "total_amount": f"{float(txn.amount):.2f}",
         "currency": txn.currency,
         "tran_id": txn.order_id,
         "success_url": success_url,
         "fail_url": fail_url,
         "cancel_url": fail_url,
-        "cus_name": (
-            txn.employee.name
-            if txn.employee
-            else ""
-        ),
-        "cus_email": (
-            txn.employee.email
-            if txn.employee
-            else ""
-        ),
-        "cus_phone": (
-            txn.employee.phone
-            if txn.employee
-            else ""
-        ),
+        "ipn_url": request.build_absolute_uri(reverse("ssl_ipn")),
+        "cus_name": txn.employee.name if txn.employee else "Employee",
+        "cus_email": txn.employee.email if txn.employee else "employee@example.com",
+        "cus_phone": str(txn.employee.phone) if txn.employee else "01700000000",
+        "cus_add1": "Dhaka, Bangladesh",
+        "cus_city": "Dhaka",
+        "cus_state": "Dhaka",
+        "cus_postcode": "1000",
+        "cus_country": "Bangladesh",
+        "shipping_method": "NO",
+        "num_of_item": 1,
+        "product_name": f"Retry Payment - {txn.order_id}",
+        "product_category": "topup",
+        "product_profile": "general",
         "value_a": str(txn.id),
     }
 
@@ -3268,9 +3381,14 @@ def checkout(request):
         # ================= SSL PAYMENT =================
 
         elif payment == "ssl":
-
+            request.session["shipping_name"] = request.POST.get("name", customer.name)
+            request.session["shipping_email"] = request.POST.get("email", customer.email)
+            request.session["shipping_phone"] = request.POST.get("phone", customer.phone)
+            request.session["shipping_division"] = request.POST.get("division", "")
+            request.session["shipping_district"] = request.POST.get("district", "")
+            request.session["shipping_postal"] = request.POST.get("postal", "")
             request.session["shipping_address"] = request.POST.get("address1", "")
-            request.session["phone"] = request.POST.get("phone", "")
+            request.session["phone"] = request.POST.get("phone", customer.phone)
 
             return redirect("start_ssl_payment")
 
@@ -3288,16 +3406,23 @@ def checkout(request):
 def start_ssl_payment(request):
 
     customer_id = request.session.get("customer_id")
+    if not customer_id:
+        messages.error(request, "Please log in to proceed with checkout.")
+        return redirect("customer_login_page")
 
-    customer = Customer.objects.get(id=customer_id)
+    try:
+        customer = Customer.objects.get(id=customer_id)
+    except Customer.DoesNotExist:
+        messages.error(request, "Customer account not found. Please log in again.")
+        return redirect("customer_login_page")
 
     cart_id = request.session.get("checkout_cart_id") or request.GET.get("cart_id")
     if cart_id:
-        cart_items = Cart.objects.filter(customer=customer, id=cart_id)
+        cart_items = Cart.objects.filter(customer=customer, id=cart_id).select_related("product")
     else:
-        cart_items = Cart.objects.filter(customer=customer)
+        cart_items = Cart.objects.filter(customer=customer).select_related("product")
 
-    if not cart_items:
+    if not cart_items.exists():
         messages.warning(request, "That cart item is no longer available.")
         return redirect("customer_cart")
 
@@ -3310,41 +3435,126 @@ def start_ssl_payment(request):
         return redirect("checkout")
 
     total = sum(i.subtotal for i in cart_items)
+    if total <= 0:
+        messages.error(request, "Invalid order total.")
+        return redirect("customer_cart")
+
+    store_id = getattr(settings, "SSL_COMMERZ_STORE_ID", "").strip()
+    store_passwd = getattr(settings, "SSL_COMMERZ_STORE_PASSWORD", "").strip()
+    if not store_id or not store_passwd:
+        messages.error(
+            request,
+            "SSLCommerz credentials (SSL_COMMERZ_STORE_ID / SSL_COMMERZ_STORE_PASSWORD) are not configured on this server.",
+        )
+        return redirect("checkout")
 
     tran_id = "ORDER-" + uuid.uuid4().hex[:15]
+
+    shipping_name = request.session.get("shipping_name") or customer.name
+    shipping_email = request.session.get("shipping_email") or customer.email
+    shipping_phone = (
+        request.session.get("shipping_phone")
+        or request.session.get("phone")
+        or customer.phone
+        or "01700000000"
+    )
+    shipping_address = (
+        request.session.get("shipping_address")
+        or getattr(customer, "address", "")
+        or "Dhaka, Bangladesh"
+    )
+    shipping_district = request.session.get("shipping_district") or ""
+    shipping_division = request.session.get("shipping_division") or ""
+    shipping_city = shipping_district or shipping_division or "Dhaka"
+    shipping_postal = request.session.get("shipping_postal") or "1000"
+
     PaymentTransaction.objects.create(
         order_id=tran_id,
         customer=customer,
         amount=total,
         currency="BDT",
         status="pending",
-        metadata={"cart_item_id": [ci.id for ci in cart_items]},
+        metadata={
+            "cart_item_id": [ci.id for ci in cart_items],
+            "shipping_name": shipping_name,
+            "shipping_email": shipping_email,
+            "shipping_phone": str(shipping_phone),
+            "shipping_address": shipping_address,
+            "shipping_city": shipping_city,
+            "shipping_state": shipping_division or shipping_city,
+            "shipping_postal": shipping_postal,
+        },
     )
+
+    success_url = request.build_absolute_uri(reverse("payment_success"))
+    fail_url = request.build_absolute_uri(reverse("payment_fail"))
+    ipn_url = request.build_absolute_uri(reverse("ssl_ipn"))
+
     payload = {
-        "store_id": settings.SSL_COMMERZ_STORE_ID,
-        "store_passwd": settings.SSL_COMMERZ_STORE_PASSWORD,
-        "total_amount": str(total),
+        "store_id": store_id,
+        "store_passwd": store_passwd,
+        "total_amount": f"{float(total):.2f}",
         "currency": "BDT",
         "tran_id": tran_id,
-        "success_url": request.build_absolute_uri(reverse("payment_success")),
-        "fail_url": request.build_absolute_uri(reverse("payment_fail")),
-        "cancel_url": request.build_absolute_uri(reverse("payment_fail")),
-        "cus_name": customer.name,
-        "cus_email": customer.email,
-        "cus_phone": customer.phone,
-        "product_name": "Products",
+        "success_url": success_url,
+        "fail_url": fail_url,
+        "cancel_url": fail_url,
+        "ipn_url": ipn_url,
+        "cus_name": shipping_name or "Customer",
+        "cus_email": shipping_email or "customer@example.com",
+        "cus_phone": str(shipping_phone),
+        "cus_add1": shipping_address,
+        "cus_city": shipping_city,
+        "cus_state": shipping_division or shipping_city,
+        "cus_postcode": shipping_postal,
+        "cus_country": "Bangladesh",
+        "ship_name": shipping_name or "Customer",
+        "ship_add1": shipping_address,
+        "ship_city": shipping_city,
+        "ship_state": shipping_division or shipping_city,
+        "ship_postcode": shipping_postal,
+        "ship_country": "Bangladesh",
+        "shipping_method": "NO",
+        "num_of_item": total_quantity,
+        "product_name": "Order Products",
         "product_category": "Fashion",
         "product_profile": "general",
     }
-    response = requests.post(
-        settings.SSLCOMMERZ_API_URL,
-        data=payload,
-        timeout=20,
+
+    api_url = getattr(
+        settings,
+        "SSLCOMMERZ_API_URL",
+        "https://sandbox.sslcommerz.com/gwprocess/v4/api.php",
     )
 
-    data = response.json()
+    try:
+        response = requests.post(
+            api_url,
+            data=payload,
+            timeout=25,
+        )
+        response.raise_for_status()
+        data = response.json()
+    except (requests.RequestException, ValueError) as exc:
+        PaymentTransaction.objects.filter(order_id=tran_id).update(
+            status="failed", metadata={"error": str(exc)}
+        )
+        messages.error(request, f"Unable to reach payment gateway: {exc}")
+        return redirect("checkout")
 
-    return redirect(data["GatewayPageURL"])
+    if data.get("status") in ("SUCCESS", "success") and data.get("GatewayPageURL"):
+        return redirect(data["GatewayPageURL"])
+
+    failed_reason = (
+        data.get("failedreason")
+        or data.get("status")
+        or "Failed to initialize payment gateway."
+    )
+    PaymentTransaction.objects.filter(order_id=tran_id).update(
+        status="failed", metadata={"gateway_response": data}
+    )
+    messages.error(request, f"Payment gateway error: {failed_reason}")
+    return redirect("checkout")
 
 
 def orders_html(request):

@@ -34,6 +34,9 @@ The project pins Python 3.13 in `.python-version`. Dependencies are installed fr
    - Under **Environment Variables**, add:
      - `DATABASE_URL`: your Supabase connection string
      - `DJANGO_SECRET_KEY`: a random secret key string
+     - `SSL_COMMERZ_STORE_ID`: your SSLCommerz Store ID (defaults to `testbox` for sandbox testing)
+     - `SSL_COMMERZ_STORE_PASSWORD`: your SSLCommerz Store Password (defaults to `qwerty` for sandbox testing)
+     - `SSLCOMMERZ_API_URL`: https://sandbox.sslcommerz.com/gwprocess/v4/api.php (or https://securepay.sslcommerz.com/gwprocess/v4/api.php for live)
    - Click **Deploy**.
 
 ## Automatic Smart Defaults

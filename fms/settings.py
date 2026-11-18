@@ -74,6 +74,9 @@ if IS_VERCEL or not CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(origin)
     if "https://*.vercel.app" not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append("https://*.vercel.app")
+for _ssl_domain in ("https://sandbox.sslcommerz.com", "https://securepay.sslcommerz.com"):
+    if _ssl_domain not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_ssl_domain)
 
 
 # Application definition
@@ -351,8 +354,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # --------------------------
 # Payment Gateway Configuration (SSLCommerz)
 # --------------------------
-SSL_COMMERZ_STORE_ID = _env("SSL_COMMERZ_STORE_ID", "")
-SSL_COMMERZ_STORE_PASSWORD = _env("SSL_COMMERZ_STORE_PASSWORD", "")
+SSL_COMMERZ_STORE_ID = _env("SSL_COMMERZ_STORE_ID", "testbox")
+SSL_COMMERZ_STORE_PASSWORD = _env("SSL_COMMERZ_STORE_PASSWORD", "qwerty")
 SSLCOMMERZ_API_URL = _env(
     "SSLCOMMERZ_API_URL",
     "https://sandbox.sslcommerz.com/gwprocess/v4/api.php",
@@ -386,6 +389,7 @@ CSRF_COOKIE_SECURE = _env(
     "true",
     "yes",
 )
+USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_HSTS_SECONDS = int(
     _env("SECURE_HSTS_SECONDS", "31536000" if IS_VERCEL else "0")

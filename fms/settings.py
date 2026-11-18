@@ -321,6 +321,8 @@ if USE_SUPABASE_STORAGE and HAS_S3_STORAGE:
             else ""
         )
         AWS_S3_CUSTOM_DOMAIN = _env("AWS_S3_CUSTOM_DOMAIN", default_custom_domain)
+    SUPABASE_MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/" if AWS_S3_CUSTOM_DOMAIN else "https://sdcqglfvkausnmqrpmsi.supabase.co/storage/v1/object/public/media/"
+    MEDIA_URL = _env("MEDIA_URL", SUPABASE_MEDIA_URL)
 else:
     STORAGES = {
         "default": {
@@ -330,8 +332,14 @@ else:
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
+    # On Vercel, serve media directly from the public Supabase Storage CDN so all photos display.
+    # Locally, fallback to local "/media/" so local development works seamlessly.
+    SUPABASE_MEDIA_URL = "https://sdcqglfvkausnmqrpmsi.supabase.co/storage/v1/object/public/media/"
+    MEDIA_URL = _env("MEDIA_URL", SUPABASE_MEDIA_URL if IS_VERCEL else "/media/")
 
-MEDIA_URL = "/media/"
+if not MEDIA_URL.endswith("/"):
+    MEDIA_URL += "/"
+
 MEDIA_ROOT = BASE_DIR / "media"
 
 
